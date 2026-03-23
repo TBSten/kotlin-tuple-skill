@@ -36,3 +36,12 @@ After installing the skill, Claude Code will automatically activate it when you 
 - "Check multiple nullable values for non-null at once"
 
 The package name and output directory will be inferred from your project structure or confirmed interactively.
+
+## Repository Structure
+
+```
+skills/kotlin-tuple/
+└── SKILL.md          ← Only this directory is installed by `npx skills add`
+```
+
+README and other repo files are not included when installing the skill.
