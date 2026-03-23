@@ -92,7 +92,7 @@ Let N be the max size (default N=20).
 |---|---|---|
 | `Tuple.kt` | Data class definitions for Tuple0–TupleN | Required |
 | `TupleFactory.kt` | `tupleOf()` factory functions (0–N args) | Required |
-| `TupleToList.kt` | `toList()` extension functions for Tuple → `List<Any?>` | Optional |
+| `TupleToList.kt` | `toList()` extension functions for Tuple → `List<Base>` | Optional |
 | `TupleSerializer.kt` | `KSerializer` implementations for kotlinx.serialization | Optional |
 | `AwaitAll.kt` | Type-safe `awaitAll()` for 1–N Deferred values | Optional |
 | `AllNotNullOrNull.kt` | `allNotNullOrNull()` top-level and extension functions | Optional |
@@ -157,26 +157,26 @@ fun <A0, A1, A2, A3> tupleOf(first: A0, second: A1, third: A2, fourth: A3): Tupl
 
 ### TupleToList.kt
 
-Converts a Tuple to a `List<Any?>`. Define a `toList()` extension function for each Tuple.
+Converts a Tuple to a `List<Base>` where `Base` is a common supertype of all elements. Uses a `Base` type parameter with upper-bound constraints on each element type (`A0 : Base, A1 : Base, ...`), so the returned list is type-safe.
 
-- Tuple0 returns an empty list
-- Tuple2/Tuple3 are typealiases for Pair/Triple — use `first/second/third` to access properties (Pair already has `toList()` in stdlib, but we define our own for consistency)
+- Tuple0 returns `emptyList<Nothing>()` (compatible with any `List<T>`)
+- Tuple2/Tuple3 are typealiases for Pair/Triple — use `first/second/third` to access properties (Pair already has `toList()` in stdlib, but we define our own for type-safe base-typed return)
 
 ```kotlin
 // Tuple0
-fun Tuple0.toList(): List<Any?> = emptyList()
+fun Tuple0.toList(): List<Nothing> = emptyList()
 
 // Tuple1
-fun <A0> Tuple1<A0>.toList(): List<Any?> = listOf(first)
+fun <Base, A0 : Base> Tuple1<A0>.toList(): List<Base> = listOf(first)
 
 // Tuple2 (= Pair)
-fun <A0, A1> Tuple2<A0, A1>.toList(): List<Any?> = listOf(first, second)
+fun <Base, A0 : Base, A1 : Base> Tuple2<A0, A1>.toList(): List<Base> = listOf(first, second)
 
 // Tuple3 (= Triple)
-fun <A0, A1, A2> Tuple3<A0, A1, A2>.toList(): List<Any?> = listOf(first, second, third)
+fun <Base, A0 : Base, A1 : Base, A2 : Base> Tuple3<A0, A1, A2>.toList(): List<Base> = listOf(first, second, third)
 
 // Tuple4
-fun <A0, A1, A2, A3> Tuple4<A0, A1, A2, A3>.toList(): List<Any?> = listOf(first, second, third, fourth)
+fun <Base, A0 : Base, A1 : Base, A2 : Base, A3 : Base> Tuple4<A0, A1, A2, A3>.toList(): List<Base> = listOf(first, second, third, fourth)
 
 // ... up to TupleN
 ```
