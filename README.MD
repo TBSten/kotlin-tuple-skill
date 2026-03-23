@@ -12,12 +12,13 @@ npx skills add tbsten/kotlin-tuple-skill
 
 ## Features
 
-This skill auto-generates up to 5 files:
+This skill auto-generates up to 6 files:
 
 | File | Description | Required |
 |---|---|---|
 | `Tuple.kt` | Data class definitions for Tuple0–TupleN | Required |
 | `TupleFactory.kt` | `tupleOf()` factory functions (0–N arguments) | Required |
+| `TupleToList.kt` | `toList()` extension functions | Optional |
 | `TupleSerializer.kt` | `KSerializer` implementations for kotlinx.serialization | Optional |
 | `AwaitAll.kt` | Type-safe `awaitAll()` for 1–N `Deferred` values | Optional |
 | `AllNotNullOrNull.kt` | `allNotNullOrNull()` top-level and extension functions | Optional |

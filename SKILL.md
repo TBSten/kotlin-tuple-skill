@@ -2,7 +2,7 @@
 name: kotlin-tuple
 description: >
   Generates type-safe Tuple utilities (Tuple0–Tuple20) for Kotlin and Kotlin Multiplatform projects.
-  Creates Tuple data classes, tupleOf factories, KSerializer for kotlinx.serialization, type-safe awaitAll, and allNotNullOrNull in one go.
+  Creates Tuple data classes, tupleOf factories, toList conversion, KSerializer for kotlinx.serialization, type-safe awaitAll, and allNotNullOrNull in one go.
   Use when requested: "add Tuple", "generate tupleOf", "type-safe Tuple", "type-safe awaitAll",
   "add allNotNullOrNull", "await multiple Deferred with type safety",
   "null-check multiple nullable values at once".
@@ -12,7 +12,7 @@ description: >
 # Kotlin Tuple Utility Generation Skill
 
 Generates type-safe Tuple utilities for Kotlin and Kotlin Multiplatform projects.
-Produces data classes from Tuple0 to TupleN, along with factory functions, serializers, coroutine utilities, and null-safety utilities across up to 5 files.
+Produces data classes from Tuple0 to TupleN, along with factory functions, list conversion, serializers, coroutine utilities, and null-safety utilities across up to 6 files.
 
 ## Usage
 
@@ -31,6 +31,7 @@ Before generating code, confirm the following with the user in **a single messag
 4. **File types to generate** (default: all)
    - Let the user select (multiple choice):
      - [x] `Tuple.kt` + `TupleFactory.kt` — Tuple data classes and tupleOf factories (required, always generated)
+     - [x] `TupleToList.kt` — `toList()` extension functions
      - [x] `TupleSerializer.kt` — KSerializer implementations for kotlinx.serialization (requires kotlinx-serialization)
      - [x] `AwaitAll.kt` — Type-safe awaitAll (requires kotlinx-coroutines)
      - [x] `AllNotNullOrNull.kt` — allNotNullOrNull utility
@@ -67,6 +68,7 @@ I'll generate Tuple utilities. Let me confirm the following:
 
 4. Files to generate:
    - [x] Tuple.kt + TupleFactory.kt (required)
+   - [x] TupleToList.kt (toList() conversion)
    - [x] TupleSerializer.kt (kotlinx.serialization support)
    - [x] AwaitAll.kt (type-safe awaitAll)
    - [x] AllNotNullOrNull.kt (null-safety utility)
@@ -90,6 +92,7 @@ Let N be the max size (default N=20).
 |---|---|---|
 | `Tuple.kt` | Data class definitions for Tuple0–TupleN | Required |
 | `TupleFactory.kt` | `tupleOf()` factory functions (0–N args) | Required |
+| `TupleToList.kt` | `toList()` extension functions for Tuple → `List<Any?>` | Optional |
 | `TupleSerializer.kt` | `KSerializer` implementations for kotlinx.serialization | Optional |
 | `AwaitAll.kt` | Type-safe `awaitAll()` for 1–N Deferred values | Optional |
 | `AllNotNullOrNull.kt` | `allNotNullOrNull()` top-level and extension functions | Optional |
@@ -151,6 +154,32 @@ fun <A0, A1, A2, A3> tupleOf(first: A0, second: A1, third: A2, fourth: A3): Tupl
 
 - `Tuple2(first, second)` is equivalent to `Pair(first, second)` (typealias)
 - `Tuple3(first, second, third)` is equivalent to `Triple(first, second, third)` (typealias)
+
+### TupleToList.kt
+
+Converts a Tuple to a `List<Any?>`. Define a `toList()` extension function for each Tuple.
+
+- Tuple0 returns an empty list
+- Tuple2/Tuple3 are typealiases for Pair/Triple — use `first/second/third` to access properties (Pair already has `toList()` in stdlib, but we define our own for consistency)
+
+```kotlin
+// Tuple0
+fun Tuple0.toList(): List<Any?> = emptyList()
+
+// Tuple1
+fun <A0> Tuple1<A0>.toList(): List<Any?> = listOf(first)
+
+// Tuple2 (= Pair)
+fun <A0, A1> Tuple2<A0, A1>.toList(): List<Any?> = listOf(first, second)
+
+// Tuple3 (= Triple)
+fun <A0, A1, A2> Tuple3<A0, A1, A2>.toList(): List<Any?> = listOf(first, second, third)
+
+// Tuple4
+fun <A0, A1, A2, A3> Tuple4<A0, A1, A2, A3>.toList(): List<Any?> = listOf(first, second, third, fourth)
+
+// ... up to TupleN
+```
 
 ### TupleSerializer.kt
 

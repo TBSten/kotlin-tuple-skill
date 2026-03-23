@@ -12,12 +12,13 @@ npx skills add tbsten/kotlin-tuple-skill
 
 ## 機能
 
-最大 5 ファイルを自動生成します。
+最大 6 ファイルを自動生成します。
 
 | ファイル | 内容 | 必須 |
 |---|---|---|
 | `Tuple.kt` | Tuple0〜TupleN のデータクラス定義 | 必須 |
 | `TupleFactory.kt` | `tupleOf()` ファクトリ関数 (0〜N 引数) | 必須 |
+| `TupleToList.kt` | `toList()` 拡張関数 | 選択 |
 | `TupleSerializer.kt` | kotlinx.serialization 用 `KSerializer` 実装 | 選択 |
 | `AwaitAll.kt` | 型安全な `awaitAll()` (Deferred 1〜N 個) | 選択 |
 | `AllNotNullOrNull.kt` | `allNotNullOrNull()` トップレベル関数 + 拡張関数 | 選択 |
