@@ -1,29 +1,34 @@
 # Kotlin Tuple Skill
 
-### Android
-To run the application on android device/emulator:  
- - open project in Android Studio and run imported android run configuration  
+A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skill that generates type-safe Tuple utilities (Tuple0–Tuple20) for Kotlin (Multiplatform) projects.
 
-To build the application bundle:  
- - run `./gradlew :androidApp:assembleDebug`  
- - find `.apk` file in `androidApp/build/outputs/apk/debug/androidApp-debug.apk`  
+> Japanese version: [README.ja.md](./README.ja.md)
 
-### Desktop
-Run the desktop application: `./gradlew :desktopApp:run`  
-Run the desktop **hot reload** application: `./gradlew :desktopApp:hotRun --auto`  
+## Installation
 
-### iOS
-To run the application on iPhone device/simulator:  
- - Open `iosApp/iosApp.xcproject` in Xcode and run standard configuration  
- - Or use [Kotlin Multiplatform Mobile plugin](https://plugins.jetbrains.com/plugin/14936-kotlin-multiplatform-mobile) for Android Studio  
+```bash
+npx skills add tbsten/kotlin-tuple-skill
+```
 
-### Web Distribution
-Build web distribution: `./gradlew :webApp:composeCompatibilityBrowserDistribution`  
-Deploy a dir `webApp/build/dist/composeWebCompatibility/productionExecutable` to a web server  
+## Features
 
-### JS Browser
-Run the browser application: `./gradlew :webApp:jsBrowserDevelopmentRun`  
+This skill auto-generates the following 4 files:
 
-### Wasm Browser
-Run the browser application: `./gradlew :webApp:wasmJsBrowserDevelopmentRun`  
+| File | Description |
+|---|---|
+| `Tuple.kt` | Data class definitions for Tuple0–Tuple20 |
+| `TupleFactory.kt` | `tupleOf()` factory functions (0–20 arguments) |
+| `AwaitAll.kt` | Type-safe `awaitAll()` for 1–20 `Deferred` values |
+| `AllNotNullOrNull.kt` | `allNotNullOrNull()` top-level and extension functions |
 
+## Usage
+
+After installing the skill, Claude Code will automatically activate it when you make requests like:
+
+- "Add Tuple utilities"
+- "Generate tupleOf"
+- "I need a type-safe awaitAll"
+- "Await multiple Deferred values with type safety"
+- "Check multiple nullable values for non-null at once"
+
+The package name and output directory will be inferred from your project structure or confirmed interactively.
