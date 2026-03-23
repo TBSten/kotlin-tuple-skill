@@ -80,7 +80,7 @@ OK to proceed?
 ### After Confirmation
 
 1. Finalize the generation scope based on the user's answers
-2. Generate selected files using the user-specified max Tuple size
+2. Generate all selected files **in parallel** (each file is independent — use parallel tool calls to write them simultaneously)
 3. If TupleSerializer.kt is selected, verify `kotlinx-serialization` plugin and dependency in build.gradle.kts
 4. If AwaitAll.kt is selected, verify `kotlinx-coroutines` dependency in build.gradle.kts
 
