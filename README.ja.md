@@ -1,6 +1,6 @@
 # Kotlin Tuple Skill
 
-Kotlin (Multiplatform) プロジェクトに型安全な Tuple ユーティリティ (Tuple0〜Tuple20) を生成する [Claude Code](https://docs.anthropic.com/en/docs/claude-code) スキルです。
+Kotlin / Kotlin Multiplatform プロジェクトに型安全な Tuple ユーティリティ (Tuple0〜Tuple20) を生成する [Claude Code](https://docs.anthropic.com/en/docs/claude-code) スキルです。
 
 > English version: [README.MD](./README.MD)
 
@@ -12,14 +12,17 @@ npx skills add tbsten/kotlin-tuple-skill
 
 ## 機能
 
-以下の 4 ファイルを自動生成します。
+最大 5 ファイルを自動生成します。
 
-| ファイル | 内容 |
-|---|---|
-| `Tuple.kt` | Tuple0〜Tuple20 のデータクラス定義 |
-| `TupleFactory.kt` | `tupleOf()` ファクトリ関数 (0〜20 引数) |
-| `AwaitAll.kt` | 型安全な `awaitAll()` (Deferred 1〜20 個) |
-| `AllNotNullOrNull.kt` | `allNotNullOrNull()` トップレベル関数 + 拡張関数 |
+| ファイル | 内容 | 必須 |
+|---|---|---|
+| `Tuple.kt` | Tuple0〜TupleN のデータクラス定義 | 必須 |
+| `TupleFactory.kt` | `tupleOf()` ファクトリ関数 (0〜N 引数) | 必須 |
+| `TupleSerializer.kt` | kotlinx.serialization 用 `KSerializer` 実装 | 選択 |
+| `AwaitAll.kt` | 型安全な `awaitAll()` (Deferred 1〜N 個) | 選択 |
+| `AllNotNullOrNull.kt` | `allNotNullOrNull()` トップレベル関数 + 拡張関数 | 選択 |
+
+Tuple の最大サイズ (N)、生成先モジュール、どのオプションファイルを生成するかは、生成前に対話的に確認されます。
 
 ## 使い方
 

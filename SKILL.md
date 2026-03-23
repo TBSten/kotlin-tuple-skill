@@ -2,7 +2,7 @@
 name: kotlin-tuple
 description: >
   Generates type-safe Tuple utilities (Tuple0–Tuple20) for Kotlin and Kotlin Multiplatform projects.
-  Creates Tuple data classes, tupleOf factories, type-safe awaitAll, and allNotNullOrNull in one go.
+  Creates Tuple data classes, tupleOf factories, KSerializer for kotlinx.serialization, type-safe awaitAll, and allNotNullOrNull in one go.
   Use when requested: "add Tuple", "generate tupleOf", "type-safe Tuple", "type-safe awaitAll",
   "add allNotNullOrNull", "await multiple Deferred with type safety",
   "null-check multiple nullable values at once".
@@ -12,7 +12,7 @@ description: >
 # Kotlin Tuple Utility Generation Skill
 
 Generates type-safe Tuple utilities for Kotlin and Kotlin Multiplatform projects.
-Produces data classes from Tuple0 to TupleN, along with factory functions, coroutine utilities, and null-safety utilities across up to 4 files.
+Produces data classes from Tuple0 to TupleN, along with factory functions, serializers, coroutine utilities, and null-safety utilities across up to 5 files.
 
 ## Usage
 
@@ -31,6 +31,7 @@ Before generating code, confirm the following with the user in **a single messag
 4. **File types to generate** (default: all)
    - Let the user select (multiple choice):
      - [x] `Tuple.kt` + `TupleFactory.kt` — Tuple data classes and tupleOf factories (required, always generated)
+     - [x] `TupleSerializer.kt` — KSerializer implementations for kotlinx.serialization (requires kotlinx-serialization)
      - [x] `AwaitAll.kt` — Type-safe awaitAll (requires kotlinx-coroutines)
      - [x] `AllNotNullOrNull.kt` — allNotNullOrNull utility
 
@@ -66,6 +67,7 @@ I'll generate Tuple utilities. Let me confirm the following:
 
 4. Files to generate:
    - [x] Tuple.kt + TupleFactory.kt (required)
+   - [x] TupleSerializer.kt (kotlinx.serialization support)
    - [x] AwaitAll.kt (type-safe awaitAll)
    - [x] AllNotNullOrNull.kt (null-safety utility)
    → Uncheck any you don't need
@@ -77,7 +79,8 @@ OK to proceed?
 
 1. Finalize the generation scope based on the user's answers
 2. Generate selected files using the user-specified max Tuple size
-3. If AwaitAll.kt is selected, verify `kotlinx-coroutines` dependency in build.gradle.kts
+3. If TupleSerializer.kt is selected, verify `kotlinx-serialization` plugin and dependency in build.gradle.kts
+4. If AwaitAll.kt is selected, verify `kotlinx-coroutines` dependency in build.gradle.kts
 
 ## Files to Generate
 
@@ -87,6 +90,7 @@ Let N be the max size (default N=20).
 |---|---|---|
 | `Tuple.kt` | Data class definitions for Tuple0–TupleN | Required |
 | `TupleFactory.kt` | `tupleOf()` factory functions (0–N args) | Required |
+| `TupleSerializer.kt` | `KSerializer` implementations for kotlinx.serialization | Optional |
 | `AwaitAll.kt` | Type-safe `awaitAll()` for 1–N Deferred values | Optional |
 | `AllNotNullOrNull.kt` | `allNotNullOrNull()` top-level and extension functions | Optional |
 
@@ -147,6 +151,116 @@ fun <A0, A1, A2, A3> tupleOf(first: A0, second: A1, third: A2, fourth: A3): Tupl
 
 - `Tuple2(first, second)` is equivalent to `Pair(first, second)` (typealias)
 - `Tuple3(first, second, third)` is equivalent to `Triple(first, second, third)` (typealias)
+
+### TupleSerializer.kt
+
+Provides `KSerializer` implementations for Tuple types to support kotlinx.serialization.
+Serializes each Tuple as a JSON array (e.g., `[1, "hello", true]`).
+
+**Important**: Tuple2 (= Pair) and Tuple3 (= Triple) already have built-in serializers in kotlinx.serialization, so no custom serializer is needed for them.
+
+For each Tuple that needs a serializer (Tuple0, Tuple1, Tuple4–TupleN):
+1. Define a `TupleNSerializer` class implementing `KSerializer<TupleN<...>>`
+2. Define a companion `serializer()` function on each Tuple to enable `@Serializable(with = ...)` or auto-detection
+
+```kotlin
+import kotlinx.serialization.*
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.*
+
+// Tuple0
+object Tuple0Serializer : KSerializer<Tuple0> {
+    override val descriptor: SerialDescriptor =
+        buildSerialDescriptor("Tuple0", StructureKind.LIST)
+
+    override fun serialize(encoder: Encoder, value: Tuple0) {
+        encoder.encodeStructure(descriptor) {}
+    }
+
+    override fun deserialize(decoder: Decoder): Tuple0 =
+        decoder.decodeStructure(descriptor) { Tuple0 }
+}
+
+// Tuple1
+class Tuple1Serializer<A0>(
+    private val serializer0: KSerializer<A0>,
+) : KSerializer<Tuple1<A0>> {
+    override val descriptor: SerialDescriptor =
+        buildSerialDescriptor("Tuple1", StructureKind.LIST) {
+            element("first", serializer0.descriptor)
+        }
+
+    override fun serialize(encoder: Encoder, value: Tuple1<A0>) {
+        encoder.encodeStructure(descriptor) {
+            encodeSerializableElement(descriptor, 0, serializer0, value.first)
+        }
+    }
+
+    override fun deserialize(decoder: Decoder): Tuple1<A0> =
+        decoder.decodeStructure(descriptor) {
+            var first: A0? = null
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+            @Suppress("UNCHECKED_CAST")
+            tupleOf(first as A0)
+        }
+}
+
+// Tuple4 example
+class Tuple4Serializer<A0, A1, A2, A3>(
+    private val serializer0: KSerializer<A0>,
+    private val serializer1: KSerializer<A1>,
+    private val serializer2: KSerializer<A2>,
+    private val serializer3: KSerializer<A3>,
+) : KSerializer<Tuple4<A0, A1, A2, A3>> {
+    override val descriptor: SerialDescriptor =
+        buildSerialDescriptor("Tuple4", StructureKind.LIST) {
+            element("first", serializer0.descriptor)
+            element("second", serializer1.descriptor)
+            element("third", serializer2.descriptor)
+            element("fourth", serializer3.descriptor)
+        }
+
+    override fun serialize(encoder: Encoder, value: Tuple4<A0, A1, A2, A3>) {
+        encoder.encodeStructure(descriptor) {
+            encodeSerializableElement(descriptor, 0, serializer0, value.first)
+            encodeSerializableElement(descriptor, 1, serializer1, value.second)
+            encodeSerializableElement(descriptor, 2, serializer2, value.third)
+            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
+        }
+    }
+
+    override fun deserialize(decoder: Decoder): Tuple4<A0, A1, A2, A3> =
+        decoder.decodeStructure(descriptor) {
+            var first: A0? = null
+            var second: A1? = null
+            var third: A2? = null
+            var fourth: A3? = null
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
+                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
+                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
+                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+            @Suppress("UNCHECKED_CAST")
+            tupleOf(first as A0, second as A1, third as A2, fourth as A3)
+        }
+}
+
+// ... up to TupleN (skip Tuple2 and Tuple3)
+```
+
+**Pattern**: Each `TupleNSerializer` takes N `KSerializer` parameters (one per type parameter), uses `StructureKind.LIST` descriptor, and encodes/decodes elements by index using the ordinal property names.
 
 ### AwaitAll.kt
 
@@ -221,4 +335,5 @@ Keep the following in mind:
 - The number of type parameters and properties must match for each Tuple
 - Don't forget the Tuple2 = Pair, Tuple3 = Triple typealiases
 - Don't forget the `package` declaration at the top of each file
+- TupleSerializer.kt requires `kotlinx-serialization` — skip serializers for Tuple2 (Pair) and Tuple3 (Triple) as they have built-in support
 - AwaitAll.kt requires `import kotlinx.coroutines.Deferred`

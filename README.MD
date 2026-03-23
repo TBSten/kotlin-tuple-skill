@@ -1,6 +1,6 @@
 # Kotlin Tuple Skill
 
-A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skill that generates type-safe Tuple utilities (Tuple0–Tuple20) for Kotlin (Multiplatform) projects.
+A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skill that generates type-safe Tuple utilities (Tuple0–Tuple20) for Kotlin and Kotlin Multiplatform projects.
 
 > Japanese version: [README.ja.md](./README.ja.md)
 
@@ -12,14 +12,17 @@ npx skills add tbsten/kotlin-tuple-skill
 
 ## Features
 
-This skill auto-generates the following 4 files:
+This skill auto-generates up to 5 files:
 
-| File | Description |
-|---|---|
-| `Tuple.kt` | Data class definitions for Tuple0–Tuple20 |
-| `TupleFactory.kt` | `tupleOf()` factory functions (0–20 arguments) |
-| `AwaitAll.kt` | Type-safe `awaitAll()` for 1–20 `Deferred` values |
-| `AllNotNullOrNull.kt` | `allNotNullOrNull()` top-level and extension functions |
+| File | Description | Required |
+|---|---|---|
+| `Tuple.kt` | Data class definitions for Tuple0–TupleN | Required |
+| `TupleFactory.kt` | `tupleOf()` factory functions (0–N arguments) | Required |
+| `TupleSerializer.kt` | `KSerializer` implementations for kotlinx.serialization | Optional |
+| `AwaitAll.kt` | Type-safe `awaitAll()` for 1–N `Deferred` values | Optional |
+| `AllNotNullOrNull.kt` | `allNotNullOrNull()` top-level and extension functions | Optional |
+
+The max Tuple size (N), target module, and which optional files to generate are all confirmed interactively before generation.
 
 ## Usage
 
