@@ -31,7 +31,7 @@ Before generating code, confirm the following with the user in **a single messag
    - Let the user select (multiple choice):
      - [x] `Tuple.kt` + `TupleFactory.kt` — Tuple data classes and tupleOf factories (required, always generated)
      - [x] `TupleToList.kt` — `toList()` extension functions
-     - [x] `TupleSerializer.kt` — KSerializer for kotlinx.serialization
+     - [x] `AbstractTupleSerializer.kt` + `TupleSerializer.kt` — KSerializer for kotlinx.serialization
      - [x] `AwaitAll.kt` — Type-safe awaitAll
      - [x] `AllNotNullOrNull.kt` — allNotNullOrNull utility
 
@@ -88,7 +88,7 @@ This skill ships pre-built example files under `example/src/commonMain/kotlin/co
 2. Create the target output directory (if not exists)
 3. **Copy selected files** from the example directory to the target output directory using Bash `cp`
    - Always copy: `Tuple.kt`, `TupleFactory.kt`
-   - Copy if selected: `TupleToList.kt`, `TupleSerializer.kt`, `AwaitAll.kt`, `AllNotNullOrNull.kt`
+   - Copy if selected: `TupleToList.kt`, `AbstractTupleSerializer.kt` + `TupleSerializer.kt`, `AwaitAll.kt`, `AllNotNullOrNull.kt`
 4. **Replace package name** in all copied files using Bash `sed`:
    ```bash
    sed -i '' 's/package com\.example\.tuple/package <USER_PACKAGE>/g' <TARGET_DIR>/*.kt

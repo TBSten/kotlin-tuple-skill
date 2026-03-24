@@ -1,15 +1,27 @@
+/**
+ * [KSerializer] implementations for Tuple types to support kotlinx.serialization.
+ *
+ * Each Tuple is serialized as a JSON array (e.g., `[1, "hello", true]`).
+ *
+ * **Note**: [Tuple2] (= [Pair]) and [Tuple3] (= [Triple]) already have built-in serializers
+ * in kotlinx.serialization, so no custom serializer is provided for them.
+ *
+ * Provides: [Tuple0Serializer], [Tuple1Serializer], [Tuple4Serializer]–[Tuple20Serializer].
+ *
+ * @see AbstractTupleSerializer Common serialization logic shared by all Tuple serializers.
+ */
 package com.example.tuple
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.descriptors.buildSerialDescriptor
-import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
-// Tuple0
-
+/**
+ * Serializer for [Tuple0]. Serializes as an empty JSON array `[]`.
+ */
 object Tuple0Serializer : KSerializer<Tuple0> {
     override val descriptor: SerialDescriptor =
         buildSerialDescriptor("Tuple0", StructureKind.LIST)
@@ -22,1497 +34,348 @@ object Tuple0Serializer : KSerializer<Tuple0> {
         decoder.decodeStructure(descriptor) { Tuple0 }
 }
 
-// Tuple1
-
-class Tuple1Serializer<A0>(
-    private val serializer0: KSerializer<A0>,
-) : KSerializer<Tuple1<A0>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple1", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-        }
-
-    override fun serialize(encoder: Encoder, value: Tuple1<A0>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple1<A0> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0)
-        }
-}
-
 // Tuple2 (= Pair) and Tuple3 (= Triple) have built-in serializers in kotlinx.serialization.
 
-// Tuple4
+/**
+ * Serializer for [Tuple1]. Serializes as a single-element JSON array `[value]`.
+ *
+ * @param serializer0 Serializer for the first element.
+ */
+class Tuple1Serializer<A0>(
+    serializer0: KSerializer<A0>,
+) : AbstractTupleSerializer<Tuple1<A0>>(
+    "Tuple1", arrayOf(serializer0), TUPLE_ELEMENT_NAMES.sliceArray(0..0),
+) {
+    override fun toValues(value: Tuple1<A0>): Array<Any?> = arrayOf(value.first)
+
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple1<A0> =
+        tupleOf(values[0] as A0)
+}
 
 class Tuple4Serializer<A0, A1, A2, A3>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-) : KSerializer<Tuple4<A0, A1, A2, A3>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple4", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+) : AbstractTupleSerializer<Tuple4<A0, A1, A2, A3>>(
+    "Tuple4", arrayOf(serializer0, serializer1, serializer2, serializer3),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..3),
+) {
+    override fun toValues(value: Tuple4<A0, A1, A2, A3>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth)
 
-    override fun serialize(encoder: Encoder, value: Tuple4<A0, A1, A2, A3>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple4<A0, A1, A2, A3> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple4<A0, A1, A2, A3> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3)
 }
-
-// Tuple5
 
 class Tuple5Serializer<A0, A1, A2, A3, A4>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-    private val serializer4: KSerializer<A4>,
-) : KSerializer<Tuple5<A0, A1, A2, A3, A4>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple5", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-            element("fifth", serializer4.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+    serializer4: KSerializer<A4>,
+) : AbstractTupleSerializer<Tuple5<A0, A1, A2, A3, A4>>(
+    "Tuple5", arrayOf(serializer0, serializer1, serializer2, serializer3, serializer4),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..4),
+) {
+    override fun toValues(value: Tuple5<A0, A1, A2, A3, A4>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth, value.fifth)
 
-    override fun serialize(encoder: Encoder, value: Tuple5<A0, A1, A2, A3, A4>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-            encodeSerializableElement(descriptor, 4, serializer4, value.fifth)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple5<A0, A1, A2, A3, A4> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            var fifth: A4? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    4 -> fifth = decodeSerializableElement(descriptor, 4, serializer4)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3, fifth as A4)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple5<A0, A1, A2, A3, A4> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3, values[4] as A4)
 }
-
-// Tuple6
 
 class Tuple6Serializer<A0, A1, A2, A3, A4, A5>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-    private val serializer4: KSerializer<A4>,
-    private val serializer5: KSerializer<A5>,
-) : KSerializer<Tuple6<A0, A1, A2, A3, A4, A5>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple6", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-            element("fifth", serializer4.descriptor)
-            element("sixth", serializer5.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+    serializer4: KSerializer<A4>, serializer5: KSerializer<A5>,
+) : AbstractTupleSerializer<Tuple6<A0, A1, A2, A3, A4, A5>>(
+    "Tuple6", arrayOf(serializer0, serializer1, serializer2, serializer3, serializer4, serializer5),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..5),
+) {
+    override fun toValues(value: Tuple6<A0, A1, A2, A3, A4, A5>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth, value.fifth, value.sixth)
 
-    override fun serialize(encoder: Encoder, value: Tuple6<A0, A1, A2, A3, A4, A5>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-            encodeSerializableElement(descriptor, 4, serializer4, value.fifth)
-            encodeSerializableElement(descriptor, 5, serializer5, value.sixth)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple6<A0, A1, A2, A3, A4, A5> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            var fifth: A4? = null
-            var sixth: A5? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    4 -> fifth = decodeSerializableElement(descriptor, 4, serializer4)
-                    5 -> sixth = decodeSerializableElement(descriptor, 5, serializer5)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3, fifth as A4, sixth as A5)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple6<A0, A1, A2, A3, A4, A5> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3, values[4] as A4, values[5] as A5)
 }
-
-// Tuple7
 
 class Tuple7Serializer<A0, A1, A2, A3, A4, A5, A6>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-    private val serializer4: KSerializer<A4>,
-    private val serializer5: KSerializer<A5>,
-    private val serializer6: KSerializer<A6>,
-) : KSerializer<Tuple7<A0, A1, A2, A3, A4, A5, A6>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple7", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-            element("fifth", serializer4.descriptor)
-            element("sixth", serializer5.descriptor)
-            element("seventh", serializer6.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+    serializer4: KSerializer<A4>, serializer5: KSerializer<A5>,
+    serializer6: KSerializer<A6>,
+) : AbstractTupleSerializer<Tuple7<A0, A1, A2, A3, A4, A5, A6>>(
+    "Tuple7", arrayOf(serializer0, serializer1, serializer2, serializer3, serializer4, serializer5, serializer6),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..6),
+) {
+    override fun toValues(value: Tuple7<A0, A1, A2, A3, A4, A5, A6>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth, value.fifth, value.sixth, value.seventh)
 
-    override fun serialize(encoder: Encoder, value: Tuple7<A0, A1, A2, A3, A4, A5, A6>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-            encodeSerializableElement(descriptor, 4, serializer4, value.fifth)
-            encodeSerializableElement(descriptor, 5, serializer5, value.sixth)
-            encodeSerializableElement(descriptor, 6, serializer6, value.seventh)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple7<A0, A1, A2, A3, A4, A5, A6> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            var fifth: A4? = null
-            var sixth: A5? = null
-            var seventh: A6? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    4 -> fifth = decodeSerializableElement(descriptor, 4, serializer4)
-                    5 -> sixth = decodeSerializableElement(descriptor, 5, serializer5)
-                    6 -> seventh = decodeSerializableElement(descriptor, 6, serializer6)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3, fifth as A4, sixth as A5, seventh as A6)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple7<A0, A1, A2, A3, A4, A5, A6> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3, values[4] as A4, values[5] as A5, values[6] as A6)
 }
-
-// Tuple8
 
 class Tuple8Serializer<A0, A1, A2, A3, A4, A5, A6, A7>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-    private val serializer4: KSerializer<A4>,
-    private val serializer5: KSerializer<A5>,
-    private val serializer6: KSerializer<A6>,
-    private val serializer7: KSerializer<A7>,
-) : KSerializer<Tuple8<A0, A1, A2, A3, A4, A5, A6, A7>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple8", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-            element("fifth", serializer4.descriptor)
-            element("sixth", serializer5.descriptor)
-            element("seventh", serializer6.descriptor)
-            element("eighth", serializer7.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+    serializer4: KSerializer<A4>, serializer5: KSerializer<A5>,
+    serializer6: KSerializer<A6>, serializer7: KSerializer<A7>,
+) : AbstractTupleSerializer<Tuple8<A0, A1, A2, A3, A4, A5, A6, A7>>(
+    "Tuple8", arrayOf(serializer0, serializer1, serializer2, serializer3, serializer4, serializer5, serializer6, serializer7),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..7),
+) {
+    override fun toValues(value: Tuple8<A0, A1, A2, A3, A4, A5, A6, A7>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth, value.fifth, value.sixth, value.seventh, value.eighth)
 
-    override fun serialize(encoder: Encoder, value: Tuple8<A0, A1, A2, A3, A4, A5, A6, A7>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-            encodeSerializableElement(descriptor, 4, serializer4, value.fifth)
-            encodeSerializableElement(descriptor, 5, serializer5, value.sixth)
-            encodeSerializableElement(descriptor, 6, serializer6, value.seventh)
-            encodeSerializableElement(descriptor, 7, serializer7, value.eighth)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple8<A0, A1, A2, A3, A4, A5, A6, A7> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            var fifth: A4? = null
-            var sixth: A5? = null
-            var seventh: A6? = null
-            var eighth: A7? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    4 -> fifth = decodeSerializableElement(descriptor, 4, serializer4)
-                    5 -> sixth = decodeSerializableElement(descriptor, 5, serializer5)
-                    6 -> seventh = decodeSerializableElement(descriptor, 6, serializer6)
-                    7 -> eighth = decodeSerializableElement(descriptor, 7, serializer7)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3, fifth as A4, sixth as A5, seventh as A6, eighth as A7)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple8<A0, A1, A2, A3, A4, A5, A6, A7> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3, values[4] as A4, values[5] as A5, values[6] as A6, values[7] as A7)
 }
-
-// Tuple9
 
 class Tuple9Serializer<A0, A1, A2, A3, A4, A5, A6, A7, A8>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-    private val serializer4: KSerializer<A4>,
-    private val serializer5: KSerializer<A5>,
-    private val serializer6: KSerializer<A6>,
-    private val serializer7: KSerializer<A7>,
-    private val serializer8: KSerializer<A8>,
-) : KSerializer<Tuple9<A0, A1, A2, A3, A4, A5, A6, A7, A8>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple9", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-            element("fifth", serializer4.descriptor)
-            element("sixth", serializer5.descriptor)
-            element("seventh", serializer6.descriptor)
-            element("eighth", serializer7.descriptor)
-            element("ninth", serializer8.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+    serializer4: KSerializer<A4>, serializer5: KSerializer<A5>,
+    serializer6: KSerializer<A6>, serializer7: KSerializer<A7>,
+    serializer8: KSerializer<A8>,
+) : AbstractTupleSerializer<Tuple9<A0, A1, A2, A3, A4, A5, A6, A7, A8>>(
+    "Tuple9", arrayOf(serializer0, serializer1, serializer2, serializer3, serializer4, serializer5, serializer6, serializer7, serializer8),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..8),
+) {
+    override fun toValues(value: Tuple9<A0, A1, A2, A3, A4, A5, A6, A7, A8>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth, value.fifth, value.sixth, value.seventh, value.eighth, value.ninth)
 
-    override fun serialize(encoder: Encoder, value: Tuple9<A0, A1, A2, A3, A4, A5, A6, A7, A8>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-            encodeSerializableElement(descriptor, 4, serializer4, value.fifth)
-            encodeSerializableElement(descriptor, 5, serializer5, value.sixth)
-            encodeSerializableElement(descriptor, 6, serializer6, value.seventh)
-            encodeSerializableElement(descriptor, 7, serializer7, value.eighth)
-            encodeSerializableElement(descriptor, 8, serializer8, value.ninth)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple9<A0, A1, A2, A3, A4, A5, A6, A7, A8> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            var fifth: A4? = null
-            var sixth: A5? = null
-            var seventh: A6? = null
-            var eighth: A7? = null
-            var ninth: A8? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    4 -> fifth = decodeSerializableElement(descriptor, 4, serializer4)
-                    5 -> sixth = decodeSerializableElement(descriptor, 5, serializer5)
-                    6 -> seventh = decodeSerializableElement(descriptor, 6, serializer6)
-                    7 -> eighth = decodeSerializableElement(descriptor, 7, serializer7)
-                    8 -> ninth = decodeSerializableElement(descriptor, 8, serializer8)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3, fifth as A4, sixth as A5, seventh as A6, eighth as A7, ninth as A8)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple9<A0, A1, A2, A3, A4, A5, A6, A7, A8> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3, values[4] as A4, values[5] as A5, values[6] as A6, values[7] as A7, values[8] as A8)
 }
-
-// Tuple10
 
 class Tuple10Serializer<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-    private val serializer4: KSerializer<A4>,
-    private val serializer5: KSerializer<A5>,
-    private val serializer6: KSerializer<A6>,
-    private val serializer7: KSerializer<A7>,
-    private val serializer8: KSerializer<A8>,
-    private val serializer9: KSerializer<A9>,
-) : KSerializer<Tuple10<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple10", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-            element("fifth", serializer4.descriptor)
-            element("sixth", serializer5.descriptor)
-            element("seventh", serializer6.descriptor)
-            element("eighth", serializer7.descriptor)
-            element("ninth", serializer8.descriptor)
-            element("tenth", serializer9.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+    serializer4: KSerializer<A4>, serializer5: KSerializer<A5>,
+    serializer6: KSerializer<A6>, serializer7: KSerializer<A7>,
+    serializer8: KSerializer<A8>, serializer9: KSerializer<A9>,
+) : AbstractTupleSerializer<Tuple10<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9>>(
+    "Tuple10", arrayOf(serializer0, serializer1, serializer2, serializer3, serializer4, serializer5, serializer6, serializer7, serializer8, serializer9),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..9),
+) {
+    override fun toValues(value: Tuple10<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth, value.fifth, value.sixth, value.seventh, value.eighth, value.ninth, value.tenth)
 
-    override fun serialize(encoder: Encoder, value: Tuple10<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-            encodeSerializableElement(descriptor, 4, serializer4, value.fifth)
-            encodeSerializableElement(descriptor, 5, serializer5, value.sixth)
-            encodeSerializableElement(descriptor, 6, serializer6, value.seventh)
-            encodeSerializableElement(descriptor, 7, serializer7, value.eighth)
-            encodeSerializableElement(descriptor, 8, serializer8, value.ninth)
-            encodeSerializableElement(descriptor, 9, serializer9, value.tenth)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple10<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            var fifth: A4? = null
-            var sixth: A5? = null
-            var seventh: A6? = null
-            var eighth: A7? = null
-            var ninth: A8? = null
-            var tenth: A9? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    4 -> fifth = decodeSerializableElement(descriptor, 4, serializer4)
-                    5 -> sixth = decodeSerializableElement(descriptor, 5, serializer5)
-                    6 -> seventh = decodeSerializableElement(descriptor, 6, serializer6)
-                    7 -> eighth = decodeSerializableElement(descriptor, 7, serializer7)
-                    8 -> ninth = decodeSerializableElement(descriptor, 8, serializer8)
-                    9 -> tenth = decodeSerializableElement(descriptor, 9, serializer9)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3, fifth as A4, sixth as A5, seventh as A6, eighth as A7, ninth as A8, tenth as A9)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple10<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3, values[4] as A4, values[5] as A5, values[6] as A6, values[7] as A7, values[8] as A8, values[9] as A9)
 }
-
-// Tuple11
 
 class Tuple11Serializer<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-    private val serializer4: KSerializer<A4>,
-    private val serializer5: KSerializer<A5>,
-    private val serializer6: KSerializer<A6>,
-    private val serializer7: KSerializer<A7>,
-    private val serializer8: KSerializer<A8>,
-    private val serializer9: KSerializer<A9>,
-    private val serializer10: KSerializer<A10>,
-) : KSerializer<Tuple11<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple11", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-            element("fifth", serializer4.descriptor)
-            element("sixth", serializer5.descriptor)
-            element("seventh", serializer6.descriptor)
-            element("eighth", serializer7.descriptor)
-            element("ninth", serializer8.descriptor)
-            element("tenth", serializer9.descriptor)
-            element("eleventh", serializer10.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+    serializer4: KSerializer<A4>, serializer5: KSerializer<A5>,
+    serializer6: KSerializer<A6>, serializer7: KSerializer<A7>,
+    serializer8: KSerializer<A8>, serializer9: KSerializer<A9>,
+    serializer10: KSerializer<A10>,
+) : AbstractTupleSerializer<Tuple11<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10>>(
+    "Tuple11", arrayOf(serializer0, serializer1, serializer2, serializer3, serializer4, serializer5, serializer6, serializer7, serializer8, serializer9, serializer10),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..10),
+) {
+    override fun toValues(value: Tuple11<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth, value.fifth, value.sixth, value.seventh, value.eighth, value.ninth, value.tenth, value.eleventh)
 
-    override fun serialize(encoder: Encoder, value: Tuple11<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-            encodeSerializableElement(descriptor, 4, serializer4, value.fifth)
-            encodeSerializableElement(descriptor, 5, serializer5, value.sixth)
-            encodeSerializableElement(descriptor, 6, serializer6, value.seventh)
-            encodeSerializableElement(descriptor, 7, serializer7, value.eighth)
-            encodeSerializableElement(descriptor, 8, serializer8, value.ninth)
-            encodeSerializableElement(descriptor, 9, serializer9, value.tenth)
-            encodeSerializableElement(descriptor, 10, serializer10, value.eleventh)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple11<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            var fifth: A4? = null
-            var sixth: A5? = null
-            var seventh: A6? = null
-            var eighth: A7? = null
-            var ninth: A8? = null
-            var tenth: A9? = null
-            var eleventh: A10? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    4 -> fifth = decodeSerializableElement(descriptor, 4, serializer4)
-                    5 -> sixth = decodeSerializableElement(descriptor, 5, serializer5)
-                    6 -> seventh = decodeSerializableElement(descriptor, 6, serializer6)
-                    7 -> eighth = decodeSerializableElement(descriptor, 7, serializer7)
-                    8 -> ninth = decodeSerializableElement(descriptor, 8, serializer8)
-                    9 -> tenth = decodeSerializableElement(descriptor, 9, serializer9)
-                    10 -> eleventh = decodeSerializableElement(descriptor, 10, serializer10)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3, fifth as A4, sixth as A5, seventh as A6, eighth as A7, ninth as A8, tenth as A9, eleventh as A10)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple11<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3, values[4] as A4, values[5] as A5, values[6] as A6, values[7] as A7, values[8] as A8, values[9] as A9, values[10] as A10)
 }
-
-// Tuple12
 
 class Tuple12Serializer<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-    private val serializer4: KSerializer<A4>,
-    private val serializer5: KSerializer<A5>,
-    private val serializer6: KSerializer<A6>,
-    private val serializer7: KSerializer<A7>,
-    private val serializer8: KSerializer<A8>,
-    private val serializer9: KSerializer<A9>,
-    private val serializer10: KSerializer<A10>,
-    private val serializer11: KSerializer<A11>,
-) : KSerializer<Tuple12<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple12", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-            element("fifth", serializer4.descriptor)
-            element("sixth", serializer5.descriptor)
-            element("seventh", serializer6.descriptor)
-            element("eighth", serializer7.descriptor)
-            element("ninth", serializer8.descriptor)
-            element("tenth", serializer9.descriptor)
-            element("eleventh", serializer10.descriptor)
-            element("twelfth", serializer11.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+    serializer4: KSerializer<A4>, serializer5: KSerializer<A5>,
+    serializer6: KSerializer<A6>, serializer7: KSerializer<A7>,
+    serializer8: KSerializer<A8>, serializer9: KSerializer<A9>,
+    serializer10: KSerializer<A10>, serializer11: KSerializer<A11>,
+) : AbstractTupleSerializer<Tuple12<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11>>(
+    "Tuple12", arrayOf(serializer0, serializer1, serializer2, serializer3, serializer4, serializer5, serializer6, serializer7, serializer8, serializer9, serializer10, serializer11),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..11),
+) {
+    override fun toValues(value: Tuple12<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth, value.fifth, value.sixth, value.seventh, value.eighth, value.ninth, value.tenth, value.eleventh, value.twelfth)
 
-    override fun serialize(encoder: Encoder, value: Tuple12<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-            encodeSerializableElement(descriptor, 4, serializer4, value.fifth)
-            encodeSerializableElement(descriptor, 5, serializer5, value.sixth)
-            encodeSerializableElement(descriptor, 6, serializer6, value.seventh)
-            encodeSerializableElement(descriptor, 7, serializer7, value.eighth)
-            encodeSerializableElement(descriptor, 8, serializer8, value.ninth)
-            encodeSerializableElement(descriptor, 9, serializer9, value.tenth)
-            encodeSerializableElement(descriptor, 10, serializer10, value.eleventh)
-            encodeSerializableElement(descriptor, 11, serializer11, value.twelfth)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple12<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            var fifth: A4? = null
-            var sixth: A5? = null
-            var seventh: A6? = null
-            var eighth: A7? = null
-            var ninth: A8? = null
-            var tenth: A9? = null
-            var eleventh: A10? = null
-            var twelfth: A11? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    4 -> fifth = decodeSerializableElement(descriptor, 4, serializer4)
-                    5 -> sixth = decodeSerializableElement(descriptor, 5, serializer5)
-                    6 -> seventh = decodeSerializableElement(descriptor, 6, serializer6)
-                    7 -> eighth = decodeSerializableElement(descriptor, 7, serializer7)
-                    8 -> ninth = decodeSerializableElement(descriptor, 8, serializer8)
-                    9 -> tenth = decodeSerializableElement(descriptor, 9, serializer9)
-                    10 -> eleventh = decodeSerializableElement(descriptor, 10, serializer10)
-                    11 -> twelfth = decodeSerializableElement(descriptor, 11, serializer11)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3, fifth as A4, sixth as A5, seventh as A6, eighth as A7, ninth as A8, tenth as A9, eleventh as A10, twelfth as A11)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple12<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3, values[4] as A4, values[5] as A5, values[6] as A6, values[7] as A7, values[8] as A8, values[9] as A9, values[10] as A10, values[11] as A11)
 }
-
-// Tuple13
 
 class Tuple13Serializer<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-    private val serializer4: KSerializer<A4>,
-    private val serializer5: KSerializer<A5>,
-    private val serializer6: KSerializer<A6>,
-    private val serializer7: KSerializer<A7>,
-    private val serializer8: KSerializer<A8>,
-    private val serializer9: KSerializer<A9>,
-    private val serializer10: KSerializer<A10>,
-    private val serializer11: KSerializer<A11>,
-    private val serializer12: KSerializer<A12>,
-) : KSerializer<Tuple13<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple13", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-            element("fifth", serializer4.descriptor)
-            element("sixth", serializer5.descriptor)
-            element("seventh", serializer6.descriptor)
-            element("eighth", serializer7.descriptor)
-            element("ninth", serializer8.descriptor)
-            element("tenth", serializer9.descriptor)
-            element("eleventh", serializer10.descriptor)
-            element("twelfth", serializer11.descriptor)
-            element("thirteenth", serializer12.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+    serializer4: KSerializer<A4>, serializer5: KSerializer<A5>,
+    serializer6: KSerializer<A6>, serializer7: KSerializer<A7>,
+    serializer8: KSerializer<A8>, serializer9: KSerializer<A9>,
+    serializer10: KSerializer<A10>, serializer11: KSerializer<A11>,
+    serializer12: KSerializer<A12>,
+) : AbstractTupleSerializer<Tuple13<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12>>(
+    "Tuple13", arrayOf(serializer0, serializer1, serializer2, serializer3, serializer4, serializer5, serializer6, serializer7, serializer8, serializer9, serializer10, serializer11, serializer12),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..12),
+) {
+    override fun toValues(value: Tuple13<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth, value.fifth, value.sixth, value.seventh, value.eighth, value.ninth, value.tenth, value.eleventh, value.twelfth, value.thirteenth)
 
-    override fun serialize(encoder: Encoder, value: Tuple13<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-            encodeSerializableElement(descriptor, 4, serializer4, value.fifth)
-            encodeSerializableElement(descriptor, 5, serializer5, value.sixth)
-            encodeSerializableElement(descriptor, 6, serializer6, value.seventh)
-            encodeSerializableElement(descriptor, 7, serializer7, value.eighth)
-            encodeSerializableElement(descriptor, 8, serializer8, value.ninth)
-            encodeSerializableElement(descriptor, 9, serializer9, value.tenth)
-            encodeSerializableElement(descriptor, 10, serializer10, value.eleventh)
-            encodeSerializableElement(descriptor, 11, serializer11, value.twelfth)
-            encodeSerializableElement(descriptor, 12, serializer12, value.thirteenth)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple13<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            var fifth: A4? = null
-            var sixth: A5? = null
-            var seventh: A6? = null
-            var eighth: A7? = null
-            var ninth: A8? = null
-            var tenth: A9? = null
-            var eleventh: A10? = null
-            var twelfth: A11? = null
-            var thirteenth: A12? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    4 -> fifth = decodeSerializableElement(descriptor, 4, serializer4)
-                    5 -> sixth = decodeSerializableElement(descriptor, 5, serializer5)
-                    6 -> seventh = decodeSerializableElement(descriptor, 6, serializer6)
-                    7 -> eighth = decodeSerializableElement(descriptor, 7, serializer7)
-                    8 -> ninth = decodeSerializableElement(descriptor, 8, serializer8)
-                    9 -> tenth = decodeSerializableElement(descriptor, 9, serializer9)
-                    10 -> eleventh = decodeSerializableElement(descriptor, 10, serializer10)
-                    11 -> twelfth = decodeSerializableElement(descriptor, 11, serializer11)
-                    12 -> thirteenth = decodeSerializableElement(descriptor, 12, serializer12)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3, fifth as A4, sixth as A5, seventh as A6, eighth as A7, ninth as A8, tenth as A9, eleventh as A10, twelfth as A11, thirteenth as A12)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple13<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3, values[4] as A4, values[5] as A5, values[6] as A6, values[7] as A7, values[8] as A8, values[9] as A9, values[10] as A10, values[11] as A11, values[12] as A12)
 }
-
-// Tuple14
 
 class Tuple14Serializer<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-    private val serializer4: KSerializer<A4>,
-    private val serializer5: KSerializer<A5>,
-    private val serializer6: KSerializer<A6>,
-    private val serializer7: KSerializer<A7>,
-    private val serializer8: KSerializer<A8>,
-    private val serializer9: KSerializer<A9>,
-    private val serializer10: KSerializer<A10>,
-    private val serializer11: KSerializer<A11>,
-    private val serializer12: KSerializer<A12>,
-    private val serializer13: KSerializer<A13>,
-) : KSerializer<Tuple14<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple14", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-            element("fifth", serializer4.descriptor)
-            element("sixth", serializer5.descriptor)
-            element("seventh", serializer6.descriptor)
-            element("eighth", serializer7.descriptor)
-            element("ninth", serializer8.descriptor)
-            element("tenth", serializer9.descriptor)
-            element("eleventh", serializer10.descriptor)
-            element("twelfth", serializer11.descriptor)
-            element("thirteenth", serializer12.descriptor)
-            element("fourteenth", serializer13.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+    serializer4: KSerializer<A4>, serializer5: KSerializer<A5>,
+    serializer6: KSerializer<A6>, serializer7: KSerializer<A7>,
+    serializer8: KSerializer<A8>, serializer9: KSerializer<A9>,
+    serializer10: KSerializer<A10>, serializer11: KSerializer<A11>,
+    serializer12: KSerializer<A12>, serializer13: KSerializer<A13>,
+) : AbstractTupleSerializer<Tuple14<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13>>(
+    "Tuple14", arrayOf(serializer0, serializer1, serializer2, serializer3, serializer4, serializer5, serializer6, serializer7, serializer8, serializer9, serializer10, serializer11, serializer12, serializer13),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..13),
+) {
+    override fun toValues(value: Tuple14<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth, value.fifth, value.sixth, value.seventh, value.eighth, value.ninth, value.tenth, value.eleventh, value.twelfth, value.thirteenth, value.fourteenth)
 
-    override fun serialize(encoder: Encoder, value: Tuple14<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-            encodeSerializableElement(descriptor, 4, serializer4, value.fifth)
-            encodeSerializableElement(descriptor, 5, serializer5, value.sixth)
-            encodeSerializableElement(descriptor, 6, serializer6, value.seventh)
-            encodeSerializableElement(descriptor, 7, serializer7, value.eighth)
-            encodeSerializableElement(descriptor, 8, serializer8, value.ninth)
-            encodeSerializableElement(descriptor, 9, serializer9, value.tenth)
-            encodeSerializableElement(descriptor, 10, serializer10, value.eleventh)
-            encodeSerializableElement(descriptor, 11, serializer11, value.twelfth)
-            encodeSerializableElement(descriptor, 12, serializer12, value.thirteenth)
-            encodeSerializableElement(descriptor, 13, serializer13, value.fourteenth)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple14<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            var fifth: A4? = null
-            var sixth: A5? = null
-            var seventh: A6? = null
-            var eighth: A7? = null
-            var ninth: A8? = null
-            var tenth: A9? = null
-            var eleventh: A10? = null
-            var twelfth: A11? = null
-            var thirteenth: A12? = null
-            var fourteenth: A13? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    4 -> fifth = decodeSerializableElement(descriptor, 4, serializer4)
-                    5 -> sixth = decodeSerializableElement(descriptor, 5, serializer5)
-                    6 -> seventh = decodeSerializableElement(descriptor, 6, serializer6)
-                    7 -> eighth = decodeSerializableElement(descriptor, 7, serializer7)
-                    8 -> ninth = decodeSerializableElement(descriptor, 8, serializer8)
-                    9 -> tenth = decodeSerializableElement(descriptor, 9, serializer9)
-                    10 -> eleventh = decodeSerializableElement(descriptor, 10, serializer10)
-                    11 -> twelfth = decodeSerializableElement(descriptor, 11, serializer11)
-                    12 -> thirteenth = decodeSerializableElement(descriptor, 12, serializer12)
-                    13 -> fourteenth = decodeSerializableElement(descriptor, 13, serializer13)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3, fifth as A4, sixth as A5, seventh as A6, eighth as A7, ninth as A8, tenth as A9, eleventh as A10, twelfth as A11, thirteenth as A12, fourteenth as A13)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple14<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3, values[4] as A4, values[5] as A5, values[6] as A6, values[7] as A7, values[8] as A8, values[9] as A9, values[10] as A10, values[11] as A11, values[12] as A12, values[13] as A13)
 }
-
-// Tuple15
 
 class Tuple15Serializer<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-    private val serializer4: KSerializer<A4>,
-    private val serializer5: KSerializer<A5>,
-    private val serializer6: KSerializer<A6>,
-    private val serializer7: KSerializer<A7>,
-    private val serializer8: KSerializer<A8>,
-    private val serializer9: KSerializer<A9>,
-    private val serializer10: KSerializer<A10>,
-    private val serializer11: KSerializer<A11>,
-    private val serializer12: KSerializer<A12>,
-    private val serializer13: KSerializer<A13>,
-    private val serializer14: KSerializer<A14>,
-) : KSerializer<Tuple15<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple15", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-            element("fifth", serializer4.descriptor)
-            element("sixth", serializer5.descriptor)
-            element("seventh", serializer6.descriptor)
-            element("eighth", serializer7.descriptor)
-            element("ninth", serializer8.descriptor)
-            element("tenth", serializer9.descriptor)
-            element("eleventh", serializer10.descriptor)
-            element("twelfth", serializer11.descriptor)
-            element("thirteenth", serializer12.descriptor)
-            element("fourteenth", serializer13.descriptor)
-            element("fifteenth", serializer14.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+    serializer4: KSerializer<A4>, serializer5: KSerializer<A5>,
+    serializer6: KSerializer<A6>, serializer7: KSerializer<A7>,
+    serializer8: KSerializer<A8>, serializer9: KSerializer<A9>,
+    serializer10: KSerializer<A10>, serializer11: KSerializer<A11>,
+    serializer12: KSerializer<A12>, serializer13: KSerializer<A13>,
+    serializer14: KSerializer<A14>,
+) : AbstractTupleSerializer<Tuple15<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14>>(
+    "Tuple15", arrayOf(serializer0, serializer1, serializer2, serializer3, serializer4, serializer5, serializer6, serializer7, serializer8, serializer9, serializer10, serializer11, serializer12, serializer13, serializer14),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..14),
+) {
+    override fun toValues(value: Tuple15<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth, value.fifth, value.sixth, value.seventh, value.eighth, value.ninth, value.tenth, value.eleventh, value.twelfth, value.thirteenth, value.fourteenth, value.fifteenth)
 
-    override fun serialize(encoder: Encoder, value: Tuple15<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-            encodeSerializableElement(descriptor, 4, serializer4, value.fifth)
-            encodeSerializableElement(descriptor, 5, serializer5, value.sixth)
-            encodeSerializableElement(descriptor, 6, serializer6, value.seventh)
-            encodeSerializableElement(descriptor, 7, serializer7, value.eighth)
-            encodeSerializableElement(descriptor, 8, serializer8, value.ninth)
-            encodeSerializableElement(descriptor, 9, serializer9, value.tenth)
-            encodeSerializableElement(descriptor, 10, serializer10, value.eleventh)
-            encodeSerializableElement(descriptor, 11, serializer11, value.twelfth)
-            encodeSerializableElement(descriptor, 12, serializer12, value.thirteenth)
-            encodeSerializableElement(descriptor, 13, serializer13, value.fourteenth)
-            encodeSerializableElement(descriptor, 14, serializer14, value.fifteenth)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple15<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            var fifth: A4? = null
-            var sixth: A5? = null
-            var seventh: A6? = null
-            var eighth: A7? = null
-            var ninth: A8? = null
-            var tenth: A9? = null
-            var eleventh: A10? = null
-            var twelfth: A11? = null
-            var thirteenth: A12? = null
-            var fourteenth: A13? = null
-            var fifteenth: A14? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    4 -> fifth = decodeSerializableElement(descriptor, 4, serializer4)
-                    5 -> sixth = decodeSerializableElement(descriptor, 5, serializer5)
-                    6 -> seventh = decodeSerializableElement(descriptor, 6, serializer6)
-                    7 -> eighth = decodeSerializableElement(descriptor, 7, serializer7)
-                    8 -> ninth = decodeSerializableElement(descriptor, 8, serializer8)
-                    9 -> tenth = decodeSerializableElement(descriptor, 9, serializer9)
-                    10 -> eleventh = decodeSerializableElement(descriptor, 10, serializer10)
-                    11 -> twelfth = decodeSerializableElement(descriptor, 11, serializer11)
-                    12 -> thirteenth = decodeSerializableElement(descriptor, 12, serializer12)
-                    13 -> fourteenth = decodeSerializableElement(descriptor, 13, serializer13)
-                    14 -> fifteenth = decodeSerializableElement(descriptor, 14, serializer14)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3, fifth as A4, sixth as A5, seventh as A6, eighth as A7, ninth as A8, tenth as A9, eleventh as A10, twelfth as A11, thirteenth as A12, fourteenth as A13, fifteenth as A14)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple15<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3, values[4] as A4, values[5] as A5, values[6] as A6, values[7] as A7, values[8] as A8, values[9] as A9, values[10] as A10, values[11] as A11, values[12] as A12, values[13] as A13, values[14] as A14)
 }
-
-// Tuple16
 
 class Tuple16Serializer<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-    private val serializer4: KSerializer<A4>,
-    private val serializer5: KSerializer<A5>,
-    private val serializer6: KSerializer<A6>,
-    private val serializer7: KSerializer<A7>,
-    private val serializer8: KSerializer<A8>,
-    private val serializer9: KSerializer<A9>,
-    private val serializer10: KSerializer<A10>,
-    private val serializer11: KSerializer<A11>,
-    private val serializer12: KSerializer<A12>,
-    private val serializer13: KSerializer<A13>,
-    private val serializer14: KSerializer<A14>,
-    private val serializer15: KSerializer<A15>,
-) : KSerializer<Tuple16<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple16", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-            element("fifth", serializer4.descriptor)
-            element("sixth", serializer5.descriptor)
-            element("seventh", serializer6.descriptor)
-            element("eighth", serializer7.descriptor)
-            element("ninth", serializer8.descriptor)
-            element("tenth", serializer9.descriptor)
-            element("eleventh", serializer10.descriptor)
-            element("twelfth", serializer11.descriptor)
-            element("thirteenth", serializer12.descriptor)
-            element("fourteenth", serializer13.descriptor)
-            element("fifteenth", serializer14.descriptor)
-            element("sixteenth", serializer15.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+    serializer4: KSerializer<A4>, serializer5: KSerializer<A5>,
+    serializer6: KSerializer<A6>, serializer7: KSerializer<A7>,
+    serializer8: KSerializer<A8>, serializer9: KSerializer<A9>,
+    serializer10: KSerializer<A10>, serializer11: KSerializer<A11>,
+    serializer12: KSerializer<A12>, serializer13: KSerializer<A13>,
+    serializer14: KSerializer<A14>, serializer15: KSerializer<A15>,
+) : AbstractTupleSerializer<Tuple16<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15>>(
+    "Tuple16", arrayOf(serializer0, serializer1, serializer2, serializer3, serializer4, serializer5, serializer6, serializer7, serializer8, serializer9, serializer10, serializer11, serializer12, serializer13, serializer14, serializer15),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..15),
+) {
+    override fun toValues(value: Tuple16<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth, value.fifth, value.sixth, value.seventh, value.eighth, value.ninth, value.tenth, value.eleventh, value.twelfth, value.thirteenth, value.fourteenth, value.fifteenth, value.sixteenth)
 
-    override fun serialize(encoder: Encoder, value: Tuple16<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-            encodeSerializableElement(descriptor, 4, serializer4, value.fifth)
-            encodeSerializableElement(descriptor, 5, serializer5, value.sixth)
-            encodeSerializableElement(descriptor, 6, serializer6, value.seventh)
-            encodeSerializableElement(descriptor, 7, serializer7, value.eighth)
-            encodeSerializableElement(descriptor, 8, serializer8, value.ninth)
-            encodeSerializableElement(descriptor, 9, serializer9, value.tenth)
-            encodeSerializableElement(descriptor, 10, serializer10, value.eleventh)
-            encodeSerializableElement(descriptor, 11, serializer11, value.twelfth)
-            encodeSerializableElement(descriptor, 12, serializer12, value.thirteenth)
-            encodeSerializableElement(descriptor, 13, serializer13, value.fourteenth)
-            encodeSerializableElement(descriptor, 14, serializer14, value.fifteenth)
-            encodeSerializableElement(descriptor, 15, serializer15, value.sixteenth)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple16<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            var fifth: A4? = null
-            var sixth: A5? = null
-            var seventh: A6? = null
-            var eighth: A7? = null
-            var ninth: A8? = null
-            var tenth: A9? = null
-            var eleventh: A10? = null
-            var twelfth: A11? = null
-            var thirteenth: A12? = null
-            var fourteenth: A13? = null
-            var fifteenth: A14? = null
-            var sixteenth: A15? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    4 -> fifth = decodeSerializableElement(descriptor, 4, serializer4)
-                    5 -> sixth = decodeSerializableElement(descriptor, 5, serializer5)
-                    6 -> seventh = decodeSerializableElement(descriptor, 6, serializer6)
-                    7 -> eighth = decodeSerializableElement(descriptor, 7, serializer7)
-                    8 -> ninth = decodeSerializableElement(descriptor, 8, serializer8)
-                    9 -> tenth = decodeSerializableElement(descriptor, 9, serializer9)
-                    10 -> eleventh = decodeSerializableElement(descriptor, 10, serializer10)
-                    11 -> twelfth = decodeSerializableElement(descriptor, 11, serializer11)
-                    12 -> thirteenth = decodeSerializableElement(descriptor, 12, serializer12)
-                    13 -> fourteenth = decodeSerializableElement(descriptor, 13, serializer13)
-                    14 -> fifteenth = decodeSerializableElement(descriptor, 14, serializer14)
-                    15 -> sixteenth = decodeSerializableElement(descriptor, 15, serializer15)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3, fifth as A4, sixth as A5, seventh as A6, eighth as A7, ninth as A8, tenth as A9, eleventh as A10, twelfth as A11, thirteenth as A12, fourteenth as A13, fifteenth as A14, sixteenth as A15)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple16<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3, values[4] as A4, values[5] as A5, values[6] as A6, values[7] as A7, values[8] as A8, values[9] as A9, values[10] as A10, values[11] as A11, values[12] as A12, values[13] as A13, values[14] as A14, values[15] as A15)
 }
-
-// Tuple17
 
 class Tuple17Serializer<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-    private val serializer4: KSerializer<A4>,
-    private val serializer5: KSerializer<A5>,
-    private val serializer6: KSerializer<A6>,
-    private val serializer7: KSerializer<A7>,
-    private val serializer8: KSerializer<A8>,
-    private val serializer9: KSerializer<A9>,
-    private val serializer10: KSerializer<A10>,
-    private val serializer11: KSerializer<A11>,
-    private val serializer12: KSerializer<A12>,
-    private val serializer13: KSerializer<A13>,
-    private val serializer14: KSerializer<A14>,
-    private val serializer15: KSerializer<A15>,
-    private val serializer16: KSerializer<A16>,
-) : KSerializer<Tuple17<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple17", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-            element("fifth", serializer4.descriptor)
-            element("sixth", serializer5.descriptor)
-            element("seventh", serializer6.descriptor)
-            element("eighth", serializer7.descriptor)
-            element("ninth", serializer8.descriptor)
-            element("tenth", serializer9.descriptor)
-            element("eleventh", serializer10.descriptor)
-            element("twelfth", serializer11.descriptor)
-            element("thirteenth", serializer12.descriptor)
-            element("fourteenth", serializer13.descriptor)
-            element("fifteenth", serializer14.descriptor)
-            element("sixteenth", serializer15.descriptor)
-            element("seventeenth", serializer16.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+    serializer4: KSerializer<A4>, serializer5: KSerializer<A5>,
+    serializer6: KSerializer<A6>, serializer7: KSerializer<A7>,
+    serializer8: KSerializer<A8>, serializer9: KSerializer<A9>,
+    serializer10: KSerializer<A10>, serializer11: KSerializer<A11>,
+    serializer12: KSerializer<A12>, serializer13: KSerializer<A13>,
+    serializer14: KSerializer<A14>, serializer15: KSerializer<A15>,
+    serializer16: KSerializer<A16>,
+) : AbstractTupleSerializer<Tuple17<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16>>(
+    "Tuple17", arrayOf(serializer0, serializer1, serializer2, serializer3, serializer4, serializer5, serializer6, serializer7, serializer8, serializer9, serializer10, serializer11, serializer12, serializer13, serializer14, serializer15, serializer16),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..16),
+) {
+    override fun toValues(value: Tuple17<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth, value.fifth, value.sixth, value.seventh, value.eighth, value.ninth, value.tenth, value.eleventh, value.twelfth, value.thirteenth, value.fourteenth, value.fifteenth, value.sixteenth, value.seventeenth)
 
-    override fun serialize(encoder: Encoder, value: Tuple17<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-            encodeSerializableElement(descriptor, 4, serializer4, value.fifth)
-            encodeSerializableElement(descriptor, 5, serializer5, value.sixth)
-            encodeSerializableElement(descriptor, 6, serializer6, value.seventh)
-            encodeSerializableElement(descriptor, 7, serializer7, value.eighth)
-            encodeSerializableElement(descriptor, 8, serializer8, value.ninth)
-            encodeSerializableElement(descriptor, 9, serializer9, value.tenth)
-            encodeSerializableElement(descriptor, 10, serializer10, value.eleventh)
-            encodeSerializableElement(descriptor, 11, serializer11, value.twelfth)
-            encodeSerializableElement(descriptor, 12, serializer12, value.thirteenth)
-            encodeSerializableElement(descriptor, 13, serializer13, value.fourteenth)
-            encodeSerializableElement(descriptor, 14, serializer14, value.fifteenth)
-            encodeSerializableElement(descriptor, 15, serializer15, value.sixteenth)
-            encodeSerializableElement(descriptor, 16, serializer16, value.seventeenth)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple17<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            var fifth: A4? = null
-            var sixth: A5? = null
-            var seventh: A6? = null
-            var eighth: A7? = null
-            var ninth: A8? = null
-            var tenth: A9? = null
-            var eleventh: A10? = null
-            var twelfth: A11? = null
-            var thirteenth: A12? = null
-            var fourteenth: A13? = null
-            var fifteenth: A14? = null
-            var sixteenth: A15? = null
-            var seventeenth: A16? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    4 -> fifth = decodeSerializableElement(descriptor, 4, serializer4)
-                    5 -> sixth = decodeSerializableElement(descriptor, 5, serializer5)
-                    6 -> seventh = decodeSerializableElement(descriptor, 6, serializer6)
-                    7 -> eighth = decodeSerializableElement(descriptor, 7, serializer7)
-                    8 -> ninth = decodeSerializableElement(descriptor, 8, serializer8)
-                    9 -> tenth = decodeSerializableElement(descriptor, 9, serializer9)
-                    10 -> eleventh = decodeSerializableElement(descriptor, 10, serializer10)
-                    11 -> twelfth = decodeSerializableElement(descriptor, 11, serializer11)
-                    12 -> thirteenth = decodeSerializableElement(descriptor, 12, serializer12)
-                    13 -> fourteenth = decodeSerializableElement(descriptor, 13, serializer13)
-                    14 -> fifteenth = decodeSerializableElement(descriptor, 14, serializer14)
-                    15 -> sixteenth = decodeSerializableElement(descriptor, 15, serializer15)
-                    16 -> seventeenth = decodeSerializableElement(descriptor, 16, serializer16)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3, fifth as A4, sixth as A5, seventh as A6, eighth as A7, ninth as A8, tenth as A9, eleventh as A10, twelfth as A11, thirteenth as A12, fourteenth as A13, fifteenth as A14, sixteenth as A15, seventeenth as A16)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple17<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3, values[4] as A4, values[5] as A5, values[6] as A6, values[7] as A7, values[8] as A8, values[9] as A9, values[10] as A10, values[11] as A11, values[12] as A12, values[13] as A13, values[14] as A14, values[15] as A15, values[16] as A16)
 }
-
-// Tuple18
 
 class Tuple18Serializer<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-    private val serializer4: KSerializer<A4>,
-    private val serializer5: KSerializer<A5>,
-    private val serializer6: KSerializer<A6>,
-    private val serializer7: KSerializer<A7>,
-    private val serializer8: KSerializer<A8>,
-    private val serializer9: KSerializer<A9>,
-    private val serializer10: KSerializer<A10>,
-    private val serializer11: KSerializer<A11>,
-    private val serializer12: KSerializer<A12>,
-    private val serializer13: KSerializer<A13>,
-    private val serializer14: KSerializer<A14>,
-    private val serializer15: KSerializer<A15>,
-    private val serializer16: KSerializer<A16>,
-    private val serializer17: KSerializer<A17>,
-) : KSerializer<Tuple18<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple18", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-            element("fifth", serializer4.descriptor)
-            element("sixth", serializer5.descriptor)
-            element("seventh", serializer6.descriptor)
-            element("eighth", serializer7.descriptor)
-            element("ninth", serializer8.descriptor)
-            element("tenth", serializer9.descriptor)
-            element("eleventh", serializer10.descriptor)
-            element("twelfth", serializer11.descriptor)
-            element("thirteenth", serializer12.descriptor)
-            element("fourteenth", serializer13.descriptor)
-            element("fifteenth", serializer14.descriptor)
-            element("sixteenth", serializer15.descriptor)
-            element("seventeenth", serializer16.descriptor)
-            element("eighteenth", serializer17.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+    serializer4: KSerializer<A4>, serializer5: KSerializer<A5>,
+    serializer6: KSerializer<A6>, serializer7: KSerializer<A7>,
+    serializer8: KSerializer<A8>, serializer9: KSerializer<A9>,
+    serializer10: KSerializer<A10>, serializer11: KSerializer<A11>,
+    serializer12: KSerializer<A12>, serializer13: KSerializer<A13>,
+    serializer14: KSerializer<A14>, serializer15: KSerializer<A15>,
+    serializer16: KSerializer<A16>, serializer17: KSerializer<A17>,
+) : AbstractTupleSerializer<Tuple18<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17>>(
+    "Tuple18", arrayOf(serializer0, serializer1, serializer2, serializer3, serializer4, serializer5, serializer6, serializer7, serializer8, serializer9, serializer10, serializer11, serializer12, serializer13, serializer14, serializer15, serializer16, serializer17),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..17),
+) {
+    override fun toValues(value: Tuple18<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth, value.fifth, value.sixth, value.seventh, value.eighth, value.ninth, value.tenth, value.eleventh, value.twelfth, value.thirteenth, value.fourteenth, value.fifteenth, value.sixteenth, value.seventeenth, value.eighteenth)
 
-    override fun serialize(encoder: Encoder, value: Tuple18<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-            encodeSerializableElement(descriptor, 4, serializer4, value.fifth)
-            encodeSerializableElement(descriptor, 5, serializer5, value.sixth)
-            encodeSerializableElement(descriptor, 6, serializer6, value.seventh)
-            encodeSerializableElement(descriptor, 7, serializer7, value.eighth)
-            encodeSerializableElement(descriptor, 8, serializer8, value.ninth)
-            encodeSerializableElement(descriptor, 9, serializer9, value.tenth)
-            encodeSerializableElement(descriptor, 10, serializer10, value.eleventh)
-            encodeSerializableElement(descriptor, 11, serializer11, value.twelfth)
-            encodeSerializableElement(descriptor, 12, serializer12, value.thirteenth)
-            encodeSerializableElement(descriptor, 13, serializer13, value.fourteenth)
-            encodeSerializableElement(descriptor, 14, serializer14, value.fifteenth)
-            encodeSerializableElement(descriptor, 15, serializer15, value.sixteenth)
-            encodeSerializableElement(descriptor, 16, serializer16, value.seventeenth)
-            encodeSerializableElement(descriptor, 17, serializer17, value.eighteenth)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple18<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            var fifth: A4? = null
-            var sixth: A5? = null
-            var seventh: A6? = null
-            var eighth: A7? = null
-            var ninth: A8? = null
-            var tenth: A9? = null
-            var eleventh: A10? = null
-            var twelfth: A11? = null
-            var thirteenth: A12? = null
-            var fourteenth: A13? = null
-            var fifteenth: A14? = null
-            var sixteenth: A15? = null
-            var seventeenth: A16? = null
-            var eighteenth: A17? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    4 -> fifth = decodeSerializableElement(descriptor, 4, serializer4)
-                    5 -> sixth = decodeSerializableElement(descriptor, 5, serializer5)
-                    6 -> seventh = decodeSerializableElement(descriptor, 6, serializer6)
-                    7 -> eighth = decodeSerializableElement(descriptor, 7, serializer7)
-                    8 -> ninth = decodeSerializableElement(descriptor, 8, serializer8)
-                    9 -> tenth = decodeSerializableElement(descriptor, 9, serializer9)
-                    10 -> eleventh = decodeSerializableElement(descriptor, 10, serializer10)
-                    11 -> twelfth = decodeSerializableElement(descriptor, 11, serializer11)
-                    12 -> thirteenth = decodeSerializableElement(descriptor, 12, serializer12)
-                    13 -> fourteenth = decodeSerializableElement(descriptor, 13, serializer13)
-                    14 -> fifteenth = decodeSerializableElement(descriptor, 14, serializer14)
-                    15 -> sixteenth = decodeSerializableElement(descriptor, 15, serializer15)
-                    16 -> seventeenth = decodeSerializableElement(descriptor, 16, serializer16)
-                    17 -> eighteenth = decodeSerializableElement(descriptor, 17, serializer17)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3, fifth as A4, sixth as A5, seventh as A6, eighth as A7, ninth as A8, tenth as A9, eleventh as A10, twelfth as A11, thirteenth as A12, fourteenth as A13, fifteenth as A14, sixteenth as A15, seventeenth as A16, eighteenth as A17)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple18<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3, values[4] as A4, values[5] as A5, values[6] as A6, values[7] as A7, values[8] as A8, values[9] as A9, values[10] as A10, values[11] as A11, values[12] as A12, values[13] as A13, values[14] as A14, values[15] as A15, values[16] as A16, values[17] as A17)
 }
-
-// Tuple19
 
 class Tuple19Serializer<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-    private val serializer4: KSerializer<A4>,
-    private val serializer5: KSerializer<A5>,
-    private val serializer6: KSerializer<A6>,
-    private val serializer7: KSerializer<A7>,
-    private val serializer8: KSerializer<A8>,
-    private val serializer9: KSerializer<A9>,
-    private val serializer10: KSerializer<A10>,
-    private val serializer11: KSerializer<A11>,
-    private val serializer12: KSerializer<A12>,
-    private val serializer13: KSerializer<A13>,
-    private val serializer14: KSerializer<A14>,
-    private val serializer15: KSerializer<A15>,
-    private val serializer16: KSerializer<A16>,
-    private val serializer17: KSerializer<A17>,
-    private val serializer18: KSerializer<A18>,
-) : KSerializer<Tuple19<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple19", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-            element("fifth", serializer4.descriptor)
-            element("sixth", serializer5.descriptor)
-            element("seventh", serializer6.descriptor)
-            element("eighth", serializer7.descriptor)
-            element("ninth", serializer8.descriptor)
-            element("tenth", serializer9.descriptor)
-            element("eleventh", serializer10.descriptor)
-            element("twelfth", serializer11.descriptor)
-            element("thirteenth", serializer12.descriptor)
-            element("fourteenth", serializer13.descriptor)
-            element("fifteenth", serializer14.descriptor)
-            element("sixteenth", serializer15.descriptor)
-            element("seventeenth", serializer16.descriptor)
-            element("eighteenth", serializer17.descriptor)
-            element("nineteenth", serializer18.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+    serializer4: KSerializer<A4>, serializer5: KSerializer<A5>,
+    serializer6: KSerializer<A6>, serializer7: KSerializer<A7>,
+    serializer8: KSerializer<A8>, serializer9: KSerializer<A9>,
+    serializer10: KSerializer<A10>, serializer11: KSerializer<A11>,
+    serializer12: KSerializer<A12>, serializer13: KSerializer<A13>,
+    serializer14: KSerializer<A14>, serializer15: KSerializer<A15>,
+    serializer16: KSerializer<A16>, serializer17: KSerializer<A17>,
+    serializer18: KSerializer<A18>,
+) : AbstractTupleSerializer<Tuple19<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18>>(
+    "Tuple19", arrayOf(serializer0, serializer1, serializer2, serializer3, serializer4, serializer5, serializer6, serializer7, serializer8, serializer9, serializer10, serializer11, serializer12, serializer13, serializer14, serializer15, serializer16, serializer17, serializer18),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..18),
+) {
+    override fun toValues(value: Tuple19<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth, value.fifth, value.sixth, value.seventh, value.eighth, value.ninth, value.tenth, value.eleventh, value.twelfth, value.thirteenth, value.fourteenth, value.fifteenth, value.sixteenth, value.seventeenth, value.eighteenth, value.nineteenth)
 
-    override fun serialize(encoder: Encoder, value: Tuple19<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-            encodeSerializableElement(descriptor, 4, serializer4, value.fifth)
-            encodeSerializableElement(descriptor, 5, serializer5, value.sixth)
-            encodeSerializableElement(descriptor, 6, serializer6, value.seventh)
-            encodeSerializableElement(descriptor, 7, serializer7, value.eighth)
-            encodeSerializableElement(descriptor, 8, serializer8, value.ninth)
-            encodeSerializableElement(descriptor, 9, serializer9, value.tenth)
-            encodeSerializableElement(descriptor, 10, serializer10, value.eleventh)
-            encodeSerializableElement(descriptor, 11, serializer11, value.twelfth)
-            encodeSerializableElement(descriptor, 12, serializer12, value.thirteenth)
-            encodeSerializableElement(descriptor, 13, serializer13, value.fourteenth)
-            encodeSerializableElement(descriptor, 14, serializer14, value.fifteenth)
-            encodeSerializableElement(descriptor, 15, serializer15, value.sixteenth)
-            encodeSerializableElement(descriptor, 16, serializer16, value.seventeenth)
-            encodeSerializableElement(descriptor, 17, serializer17, value.eighteenth)
-            encodeSerializableElement(descriptor, 18, serializer18, value.nineteenth)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple19<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            var fifth: A4? = null
-            var sixth: A5? = null
-            var seventh: A6? = null
-            var eighth: A7? = null
-            var ninth: A8? = null
-            var tenth: A9? = null
-            var eleventh: A10? = null
-            var twelfth: A11? = null
-            var thirteenth: A12? = null
-            var fourteenth: A13? = null
-            var fifteenth: A14? = null
-            var sixteenth: A15? = null
-            var seventeenth: A16? = null
-            var eighteenth: A17? = null
-            var nineteenth: A18? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    4 -> fifth = decodeSerializableElement(descriptor, 4, serializer4)
-                    5 -> sixth = decodeSerializableElement(descriptor, 5, serializer5)
-                    6 -> seventh = decodeSerializableElement(descriptor, 6, serializer6)
-                    7 -> eighth = decodeSerializableElement(descriptor, 7, serializer7)
-                    8 -> ninth = decodeSerializableElement(descriptor, 8, serializer8)
-                    9 -> tenth = decodeSerializableElement(descriptor, 9, serializer9)
-                    10 -> eleventh = decodeSerializableElement(descriptor, 10, serializer10)
-                    11 -> twelfth = decodeSerializableElement(descriptor, 11, serializer11)
-                    12 -> thirteenth = decodeSerializableElement(descriptor, 12, serializer12)
-                    13 -> fourteenth = decodeSerializableElement(descriptor, 13, serializer13)
-                    14 -> fifteenth = decodeSerializableElement(descriptor, 14, serializer14)
-                    15 -> sixteenth = decodeSerializableElement(descriptor, 15, serializer15)
-                    16 -> seventeenth = decodeSerializableElement(descriptor, 16, serializer16)
-                    17 -> eighteenth = decodeSerializableElement(descriptor, 17, serializer17)
-                    18 -> nineteenth = decodeSerializableElement(descriptor, 18, serializer18)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3, fifth as A4, sixth as A5, seventh as A6, eighth as A7, ninth as A8, tenth as A9, eleventh as A10, twelfth as A11, thirteenth as A12, fourteenth as A13, fifteenth as A14, sixteenth as A15, seventeenth as A16, eighteenth as A17, nineteenth as A18)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple19<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3, values[4] as A4, values[5] as A5, values[6] as A6, values[7] as A7, values[8] as A8, values[9] as A9, values[10] as A10, values[11] as A11, values[12] as A12, values[13] as A13, values[14] as A14, values[15] as A15, values[16] as A16, values[17] as A17, values[18] as A18)
 }
 
-// Tuple20
-
 class Tuple20Serializer<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19>(
-    private val serializer0: KSerializer<A0>,
-    private val serializer1: KSerializer<A1>,
-    private val serializer2: KSerializer<A2>,
-    private val serializer3: KSerializer<A3>,
-    private val serializer4: KSerializer<A4>,
-    private val serializer5: KSerializer<A5>,
-    private val serializer6: KSerializer<A6>,
-    private val serializer7: KSerializer<A7>,
-    private val serializer8: KSerializer<A8>,
-    private val serializer9: KSerializer<A9>,
-    private val serializer10: KSerializer<A10>,
-    private val serializer11: KSerializer<A11>,
-    private val serializer12: KSerializer<A12>,
-    private val serializer13: KSerializer<A13>,
-    private val serializer14: KSerializer<A14>,
-    private val serializer15: KSerializer<A15>,
-    private val serializer16: KSerializer<A16>,
-    private val serializer17: KSerializer<A17>,
-    private val serializer18: KSerializer<A18>,
-    private val serializer19: KSerializer<A19>,
-) : KSerializer<Tuple20<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19>> {
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("Tuple20", StructureKind.LIST) {
-            element("first", serializer0.descriptor)
-            element("second", serializer1.descriptor)
-            element("third", serializer2.descriptor)
-            element("fourth", serializer3.descriptor)
-            element("fifth", serializer4.descriptor)
-            element("sixth", serializer5.descriptor)
-            element("seventh", serializer6.descriptor)
-            element("eighth", serializer7.descriptor)
-            element("ninth", serializer8.descriptor)
-            element("tenth", serializer9.descriptor)
-            element("eleventh", serializer10.descriptor)
-            element("twelfth", serializer11.descriptor)
-            element("thirteenth", serializer12.descriptor)
-            element("fourteenth", serializer13.descriptor)
-            element("fifteenth", serializer14.descriptor)
-            element("sixteenth", serializer15.descriptor)
-            element("seventeenth", serializer16.descriptor)
-            element("eighteenth", serializer17.descriptor)
-            element("nineteenth", serializer18.descriptor)
-            element("twentieth", serializer19.descriptor)
-        }
+    serializer0: KSerializer<A0>, serializer1: KSerializer<A1>,
+    serializer2: KSerializer<A2>, serializer3: KSerializer<A3>,
+    serializer4: KSerializer<A4>, serializer5: KSerializer<A5>,
+    serializer6: KSerializer<A6>, serializer7: KSerializer<A7>,
+    serializer8: KSerializer<A8>, serializer9: KSerializer<A9>,
+    serializer10: KSerializer<A10>, serializer11: KSerializer<A11>,
+    serializer12: KSerializer<A12>, serializer13: KSerializer<A13>,
+    serializer14: KSerializer<A14>, serializer15: KSerializer<A15>,
+    serializer16: KSerializer<A16>, serializer17: KSerializer<A17>,
+    serializer18: KSerializer<A18>, serializer19: KSerializer<A19>,
+) : AbstractTupleSerializer<Tuple20<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19>>(
+    "Tuple20", arrayOf(serializer0, serializer1, serializer2, serializer3, serializer4, serializer5, serializer6, serializer7, serializer8, serializer9, serializer10, serializer11, serializer12, serializer13, serializer14, serializer15, serializer16, serializer17, serializer18, serializer19),
+    TUPLE_ELEMENT_NAMES.sliceArray(0..19),
+) {
+    override fun toValues(value: Tuple20<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19>): Array<Any?> =
+        arrayOf(value.first, value.second, value.third, value.fourth, value.fifth, value.sixth, value.seventh, value.eighth, value.ninth, value.tenth, value.eleventh, value.twelfth, value.thirteenth, value.fourteenth, value.fifteenth, value.sixteenth, value.seventeenth, value.eighteenth, value.nineteenth, value.twentieth)
 
-    override fun serialize(encoder: Encoder, value: Tuple20<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19>) {
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, serializer0, value.first)
-            encodeSerializableElement(descriptor, 1, serializer1, value.second)
-            encodeSerializableElement(descriptor, 2, serializer2, value.third)
-            encodeSerializableElement(descriptor, 3, serializer3, value.fourth)
-            encodeSerializableElement(descriptor, 4, serializer4, value.fifth)
-            encodeSerializableElement(descriptor, 5, serializer5, value.sixth)
-            encodeSerializableElement(descriptor, 6, serializer6, value.seventh)
-            encodeSerializableElement(descriptor, 7, serializer7, value.eighth)
-            encodeSerializableElement(descriptor, 8, serializer8, value.ninth)
-            encodeSerializableElement(descriptor, 9, serializer9, value.tenth)
-            encodeSerializableElement(descriptor, 10, serializer10, value.eleventh)
-            encodeSerializableElement(descriptor, 11, serializer11, value.twelfth)
-            encodeSerializableElement(descriptor, 12, serializer12, value.thirteenth)
-            encodeSerializableElement(descriptor, 13, serializer13, value.fourteenth)
-            encodeSerializableElement(descriptor, 14, serializer14, value.fifteenth)
-            encodeSerializableElement(descriptor, 15, serializer15, value.sixteenth)
-            encodeSerializableElement(descriptor, 16, serializer16, value.seventeenth)
-            encodeSerializableElement(descriptor, 17, serializer17, value.eighteenth)
-            encodeSerializableElement(descriptor, 18, serializer18, value.nineteenth)
-            encodeSerializableElement(descriptor, 19, serializer19, value.twentieth)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Tuple20<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19> =
-        decoder.decodeStructure(descriptor) {
-            var first: A0? = null
-            var second: A1? = null
-            var third: A2? = null
-            var fourth: A3? = null
-            var fifth: A4? = null
-            var sixth: A5? = null
-            var seventh: A6? = null
-            var eighth: A7? = null
-            var ninth: A8? = null
-            var tenth: A9? = null
-            var eleventh: A10? = null
-            var twelfth: A11? = null
-            var thirteenth: A12? = null
-            var fourteenth: A13? = null
-            var fifteenth: A14? = null
-            var sixteenth: A15? = null
-            var seventeenth: A16? = null
-            var eighteenth: A17? = null
-            var nineteenth: A18? = null
-            var twentieth: A19? = null
-            while (true) {
-                when (val index = decodeElementIndex(descriptor)) {
-                    0 -> first = decodeSerializableElement(descriptor, 0, serializer0)
-                    1 -> second = decodeSerializableElement(descriptor, 1, serializer1)
-                    2 -> third = decodeSerializableElement(descriptor, 2, serializer2)
-                    3 -> fourth = decodeSerializableElement(descriptor, 3, serializer3)
-                    4 -> fifth = decodeSerializableElement(descriptor, 4, serializer4)
-                    5 -> sixth = decodeSerializableElement(descriptor, 5, serializer5)
-                    6 -> seventh = decodeSerializableElement(descriptor, 6, serializer6)
-                    7 -> eighth = decodeSerializableElement(descriptor, 7, serializer7)
-                    8 -> ninth = decodeSerializableElement(descriptor, 8, serializer8)
-                    9 -> tenth = decodeSerializableElement(descriptor, 9, serializer9)
-                    10 -> eleventh = decodeSerializableElement(descriptor, 10, serializer10)
-                    11 -> twelfth = decodeSerializableElement(descriptor, 11, serializer11)
-                    12 -> thirteenth = decodeSerializableElement(descriptor, 12, serializer12)
-                    13 -> fourteenth = decodeSerializableElement(descriptor, 13, serializer13)
-                    14 -> fifteenth = decodeSerializableElement(descriptor, 14, serializer14)
-                    15 -> sixteenth = decodeSerializableElement(descriptor, 15, serializer15)
-                    16 -> seventeenth = decodeSerializableElement(descriptor, 16, serializer16)
-                    17 -> eighteenth = decodeSerializableElement(descriptor, 17, serializer17)
-                    18 -> nineteenth = decodeSerializableElement(descriptor, 18, serializer18)
-                    19 -> twentieth = decodeSerializableElement(descriptor, 19, serializer19)
-                    CompositeDecoder.DECODE_DONE -> break
-                    else -> error("Unexpected index: $index")
-                }
-            }
-            @Suppress("UNCHECKED_CAST")
-            tupleOf(first as A0, second as A1, third as A2, fourth as A3, fifth as A4, sixth as A5, seventh as A6, eighth as A7, ninth as A8, tenth as A9, eleventh as A10, twelfth as A11, thirteenth as A12, fourteenth as A13, fifteenth as A14, sixteenth as A15, seventeenth as A16, eighteenth as A17, nineteenth as A18, twentieth as A19)
-        }
+    @Suppress("UNCHECKED_CAST")
+    override fun fromValues(values: Array<Any?>): Tuple20<A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19> =
+        tupleOf(values[0] as A0, values[1] as A1, values[2] as A2, values[3] as A3, values[4] as A4, values[5] as A5, values[6] as A6, values[7] as A7, values[8] as A8, values[9] as A9, values[10] as A10, values[11] as A11, values[12] as A12, values[13] as A13, values[14] as A14, values[15] as A15, values[16] as A16, values[17] as A17, values[18] as A18, values[19] as A19)
 }
