@@ -42,6 +42,13 @@ When the user's intent is clear, skip the confirmation and proceed directly with
 - "全部入りで" / "全部生成して" / "generate all"
 - Arguments explicitly specify target module, package, and options
 
+### ARGUMENTS の処理
+
+スキルが `ARGUMENTS` パラメータを受け取った場合：
+- ARGUMENTS の値は **デフォルト値** として扱う（対象モジュール、パッケージ名、オプション等の推定に使用）
+- ユーザメッセージで明示的に指定された値がある場合は、**ユーザメッセージを優先** する
+- ARGUMENTS とユーザメッセージが矛盾する場合は、ユーザメッセージの指定に従う
+
 ### Output Directory Detection
 
 Detect the source set directory based on the module type:
@@ -94,12 +101,15 @@ This skill ships pre-built example files under `example/src/commonMain/kotlin/co
    - Example files: `<skill_dir>/example/src/commonMain/kotlin/com/example/tuple/`
 2. **Check for existing Tuple definitions** in the target module:
    - Search for `data class Tuple` in `<module>/src/`
+   - Additionally, search for Tuple-related directories: `find <module>/src -type d -name "tuple*"` でパッケージディレクトリを列挙
    - If found, ask the user whether to: overwrite, use a different package, or cancel
+   - 検出結果は Step 10 の完了メッセージで使用するため保持しておくこと
 3. Create the target output directory (if not exists)
-4. **Copy selected files individually** from the example directory to the target output directory using Bash `cp`
+4. **Copy selected files** from the example directory to the target output directory using Bash `cp`
    - Always copy: `Tuple.kt`, `TupleFactory.kt`
    - Copy if selected: `TupleToList.kt`, `AbstractTupleSerializer.kt` + `TupleSerializer.kt`, `AwaitAll.kt`, `AllNotNullOrNull.kt`
-   - Copy only the files the user selected — do **not** use `cp *.kt` (wildcard copy would include unselected files)
+   - **全ファイル選択時**: `cp <EXAMPLE_DIR>/*.kt <TARGET_DIR>/` でまとめてコピーしてよい
+   - **一部選択時**: 選択されたファイルのみ個別にコピーする（`cp *.kt` は未選択ファイルも含むため使わない）
 5. **Replace package name** in all copied files using Bash `sed`:
    ```bash
    sed -i '' 's/package com\.example\.tuple/package <USER_PACKAGE>/g' <TARGET_DIR>/*.kt
@@ -112,17 +122,39 @@ This skill ships pre-built example files under `example/src/commonMain/kotlin/co
    - Each file has clearly separated blocks per Tuple size — remove lines for Tuple(N+1) through Tuple20
 7. **If max Tuple size > 20**: Read the reference `.md` files to understand the pattern, then extend the copied files.
    - Reference files: [tuple-to-list.md](./tuple-to-list.md), [tuple-serializer.md](./tuple-serializer.md), [await-all.md](./await-all.md), [all-not-null-or-null.md](./all-not-null-or-null.md)
-8. **Verify dependencies** in `build.gradle.kts`:
-   - If TupleSerializer.kt is included → verify `kotlinx-serialization` plugin and dependency
-   - If AwaitAll.kt is included → verify `kotlinx-coroutines` dependency
+8. **Verify and add dependencies** in `build.gradle.kts`:
+   依存関係を確認し、不足している場合は追加する。追加した場合はユーザに通知すること。
+   - If TupleSerializer.kt is included:
+     - `kotlinx-serialization` plugin が未設定 → `build.gradle.kts` に追加（公式ドキュメントを参照して正しい設定方法で追加）
+     - `kotlinx-serialization-json` dependency が未設定 → `commonMain.dependencies`（KMP）または `dependencies`（JVM/Android）に追加
+   - If AwaitAll.kt is included:
+     - `kotlinx-coroutines-core` dependency が未設定 → 同様に追加
 9. **Build verification**: Run a compile check to ensure the generated files have no errors:
    - KMP: `./gradlew :<module>:compileKotlinJvm`
    - Android: `./gradlew :<module>:compileDebugKotlin`
    - If errors occur, fix them before completing
-10. **Completion message**:
-    - List all generated files
-    - If other Tuple packages exist in the same module (detected in Step 2), display:
-      「既存の Tuple パッケージ (`<package>`) が見つかりました。不要であれば削除を検討してください。」
+10. **Completion message** — 以下のテンプレートに従って出力する:
+    ```
+    ## 生成完了
+
+    **パッケージ**: `<package>`
+    **出力先**: `<output_dir>`
+
+    ### 生成ファイル
+    - Tuple.kt
+    - TupleFactory.kt
+    - ...
+
+    ### 依存関係
+    - [変更なし / 追加: kotlinx-serialization plugin, kotlinx-serialization-json, ...]
+
+    ### 既存 Tuple パッケージ
+    - [なし / `<package1>`, `<package2>`, ... — 不要であれば削除を検討してください]
+
+    ### ビルド結果
+    - [SUCCESS / FAILED — エラー内容]
+    ```
+    - Step 2 で検出した既存 Tuple パッケージ（テキスト検索・ディレクトリ検索の両方の結果）を **必ず** 報告する
 
 ### Why This Approach
 
