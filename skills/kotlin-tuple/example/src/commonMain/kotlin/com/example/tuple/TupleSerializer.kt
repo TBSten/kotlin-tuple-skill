@@ -1,3 +1,4 @@
+// NOTE: @file:OptIn must appear before the package declaration.
 @file:OptIn(
     kotlinx.serialization.InternalSerializationApi::class,
     kotlinx.serialization.ExperimentalSerializationApi::class,

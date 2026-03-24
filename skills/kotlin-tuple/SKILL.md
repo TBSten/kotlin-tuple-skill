@@ -96,9 +96,10 @@ This skill ships pre-built example files under `example/src/commonMain/kotlin/co
    - Search for `data class Tuple` in `<module>/src/`
    - If found, ask the user whether to: overwrite, use a different package, or cancel
 3. Create the target output directory (if not exists)
-4. **Copy selected files** from the example directory to the target output directory using Bash `cp`
+4. **Copy selected files individually** from the example directory to the target output directory using Bash `cp`
    - Always copy: `Tuple.kt`, `TupleFactory.kt`
    - Copy if selected: `TupleToList.kt`, `AbstractTupleSerializer.kt` + `TupleSerializer.kt`, `AwaitAll.kt`, `AllNotNullOrNull.kt`
+   - Copy only the files the user selected — do **not** use `cp *.kt` (wildcard copy would include unselected files)
 5. **Replace package name** in all copied files using Bash `sed`:
    ```bash
    sed -i '' 's/package com\.example\.tuple/package <USER_PACKAGE>/g' <TARGET_DIR>/*.kt
@@ -118,6 +119,10 @@ This skill ships pre-built example files under `example/src/commonMain/kotlin/co
    - KMP: `./gradlew :<module>:compileKotlinJvm`
    - Android: `./gradlew :<module>:compileDebugKotlin`
    - If errors occur, fix them before completing
+10. **Completion message**:
+    - List all generated files
+    - If other Tuple packages exist in the same module (detected in Step 2), display:
+      「既存の Tuple パッケージ (`<package>`) が見つかりました。不要であれば削除を検討してください。」
 
 ### Why This Approach
 
