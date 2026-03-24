@@ -15,7 +15,7 @@ npx skills add tbsten/kotlin-tuple-skill
 ### 2. Ask your AI agent:
 
 ```
-Add type-safe Tuple utilities to this project.
+Add type-safe Tuple utilities to this project with default settings.
 ```
 
 That's it! The skill will detect your project structure, confirm settings, and generate all Tuple files.

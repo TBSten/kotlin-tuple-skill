@@ -35,6 +35,13 @@ Before generating code, confirm the following with the user in **a single messag
      - [x] `AwaitAll.kt` — Type-safe awaitAll
      - [x] `AllNotNullOrNull.kt` — allNotNullOrNull utility
 
+### Skipping Confirmation
+
+When the user's intent is clear, skip the confirmation and proceed directly with default settings:
+- "デフォルトで" / "デフォルト設定で" / "with default settings"
+- "全部入りで" / "全部生成して" / "generate all"
+- Arguments explicitly specify target module, package, and options
+
 ### Output Directory Detection
 
 Detect the source set directory based on the module type:
@@ -68,7 +75,7 @@ I'll generate Tuple utilities. Let me confirm the following:
 4. Files to generate:
    - [x] Tuple.kt + TupleFactory.kt (required)
    - [x] TupleToList.kt (toList() conversion)
-   - [x] TupleSerializer.kt (kotlinx.serialization support)
+   - [x] AbstractTupleSerializer.kt + TupleSerializer.kt (kotlinx.serialization support)
    - [x] AwaitAll.kt (type-safe awaitAll)
    - [x] AllNotNullOrNull.kt (null-safety utility)
    → Uncheck any you don't need
@@ -85,11 +92,14 @@ This skill ships pre-built example files under `example/src/commonMain/kotlin/co
 
 1. Determine the absolute path of the example directory relative to this skill's location:
    - Example files: `<skill_dir>/example/src/commonMain/kotlin/com/example/tuple/`
-2. Create the target output directory (if not exists)
-3. **Copy selected files** from the example directory to the target output directory using Bash `cp`
+2. **Check for existing Tuple definitions** in the target module:
+   - Search for `data class Tuple` in `<module>/src/`
+   - If found, ask the user whether to: overwrite, use a different package, or cancel
+3. Create the target output directory (if not exists)
+4. **Copy selected files** from the example directory to the target output directory using Bash `cp`
    - Always copy: `Tuple.kt`, `TupleFactory.kt`
    - Copy if selected: `TupleToList.kt`, `AbstractTupleSerializer.kt` + `TupleSerializer.kt`, `AwaitAll.kt`, `AllNotNullOrNull.kt`
-4. **Replace package name** in all copied files using Bash `sed`:
+5. **Replace package name** in all copied files using Bash `sed`:
    ```bash
    sed -i '' 's/package com\.example\.tuple/package <USER_PACKAGE>/g' <TARGET_DIR>/*.kt
    ```
@@ -97,13 +107,17 @@ This skill ships pre-built example files under `example/src/commonMain/kotlin/co
    ```bash
    sed -i '' 's/import com\.example\.tuple\./import <USER_PACKAGE>./g' <TARGET_DIR>/*.kt
    ```
-5. **If max Tuple size < 20**: Read each copied file and remove Tuple definitions beyond N.
+6. **If max Tuple size < 20**: Read each copied file and remove Tuple definitions beyond N.
    - Each file has clearly separated blocks per Tuple size — remove lines for Tuple(N+1) through Tuple20
-6. **If max Tuple size > 20**: Read the reference `.md` files to understand the pattern, then extend the copied files.
+7. **If max Tuple size > 20**: Read the reference `.md` files to understand the pattern, then extend the copied files.
    - Reference files: [tuple-to-list.md](./tuple-to-list.md), [tuple-serializer.md](./tuple-serializer.md), [await-all.md](./await-all.md), [all-not-null-or-null.md](./all-not-null-or-null.md)
-7. **Verify dependencies** in `build.gradle.kts`:
+8. **Verify dependencies** in `build.gradle.kts`:
    - If TupleSerializer.kt is included → verify `kotlinx-serialization` plugin and dependency
    - If AwaitAll.kt is included → verify `kotlinx-coroutines` dependency
+9. **Build verification**: Run a compile check to ensure the generated files have no errors:
+   - KMP: `./gradlew :<module>:compileKotlinJvm`
+   - Android: `./gradlew :<module>:compileDebugKotlin`
+   - If errors occur, fix them before completing
 
 ### Why This Approach
 
