@@ -4,11 +4,21 @@ A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skill that gener
 
 > Japanese version: [README.ja.md](./README.ja.md)
 
-## Installation
+## Quick Start
+
+### 1. Install the skill:
 
 ```bash
 npx skills add tbsten/kotlin-tuple-skill
 ```
+
+### 2. Ask your AI agent:
+
+```
+Add type-safe Tuple utilities to this project.
+```
+
+That's it! The skill will detect your project structure, confirm settings, and generate all Tuple files.
 
 ## Features
 
