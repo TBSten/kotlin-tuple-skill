@@ -1,3 +1,8 @@
+@file:OptIn(
+    kotlinx.serialization.InternalSerializationApi::class,
+    kotlinx.serialization.ExperimentalSerializationApi::class,
+)
+
 /**
  * Abstract base class for Tuple serializers.
  *
@@ -19,6 +24,8 @@ import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.encoding.decodeStructure
+import kotlinx.serialization.encoding.encodeStructure
 
 abstract class AbstractTupleSerializer<T>(
     name: String,

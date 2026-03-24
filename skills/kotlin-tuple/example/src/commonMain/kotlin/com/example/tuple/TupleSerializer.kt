@@ -1,3 +1,8 @@
+@file:OptIn(
+    kotlinx.serialization.InternalSerializationApi::class,
+    kotlinx.serialization.ExperimentalSerializationApi::class,
+)
+
 /**
  * [KSerializer] implementations for Tuple types to support kotlinx.serialization.
  *
@@ -18,6 +23,8 @@ import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.encoding.decodeStructure
+import kotlinx.serialization.encoding.encodeStructure
 
 /**
  * Serializer for [Tuple0]. Serializes as an empty JSON array `[]`.
