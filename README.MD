@@ -1,8 +1,8 @@
 # Kotlin Tuple Skill
 
-A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skill that generates type-safe Tuple utilities (Tuple0–Tuple20) for Kotlin and Kotlin Multiplatform projects.
+[日本語](./README.ja.md) | [DeepWiki](https://deepwiki.com/TBSten/kotlin-tuple-skill)
 
-> Japanese version: [README.ja.md](./README.ja.md)
+A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skill that generates type-safe Tuple utilities (Tuple0–Tuple20) for Kotlin and Kotlin Multiplatform projects.
 
 ## Quick Start
 
