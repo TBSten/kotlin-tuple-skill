@@ -9,13 +9,15 @@ Serializes each Tuple as a JSON array (e.g., `[1, "hello", true]`).
 
 For each Tuple that needs a serializer (Tuple0, Tuple1, Tuple4–TupleN):
 1. Define a `TupleNSerializer` class implementing `KSerializer<TupleN<...>>`
-2. Define a companion `serializer()` function on each Tuple to enable `@Serializable(with = ...)` or auto-detection
 
 ```kotlin
-import kotlinx.serialization.*
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.StructureKind
+import kotlinx.serialization.descriptors.buildSerialDescriptor
+import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 // Tuple0
 object Tuple0Serializer : KSerializer<Tuple0> {
