@@ -1,9 +1,25 @@
+/**
+ * Factory functions for creating Tuple instances.
+ *
+ * Provides overloaded [tupleOf] functions for 0 to 20 elements.
+ *
+ * Usage:
+ * ```kotlin
+ * val empty = tupleOf()                    // Tuple0
+ * val single = tupleOf(1)                  // Tuple1<Int>
+ * val pair = tupleOf("a", 2)              // Tuple2<String, Int> (= Pair)
+ * val quad = tupleOf(1, "a", true, 3.14)  // Tuple4<Int, String, Boolean, Double>
+ * ```
+ */
 package com.example.tuple
 
+/** Creates a [Tuple0] (empty tuple). */
 fun tupleOf(): Tuple0 = Tuple0
 
+/** Creates a [Tuple1] with a single element. */
 fun <A0> tupleOf(first: A0): Tuple1<A0> = Tuple1(first)
 
+/** Creates a [Tuple2] (= [Pair]) with two elements. */
 fun <A0, A1> tupleOf(first: A0, second: A1): Tuple2<A0, A1> = Tuple2(first, second)
 
 fun <A0, A1, A2> tupleOf(first: A0, second: A1, third: A2): Tuple3<A0, A1, A2> = Tuple3(first, second, third)

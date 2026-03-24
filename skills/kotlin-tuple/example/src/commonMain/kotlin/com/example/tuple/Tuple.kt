@@ -1,3 +1,11 @@
+/**
+ * Type-safe Tuple data classes for Kotlin.
+ *
+ * Provides [Tuple0] through [Tuple20] for grouping multiple values with distinct types.
+ * [Tuple2] and [Tuple3] are typealiases for [Pair] and [Triple] respectively.
+ *
+ * @see tupleOf Factory functions to create Tuple instances.
+ */
 package com.example.tuple
 
 /**

@@ -1,9 +1,24 @@
+/**
+ * Extension functions to convert Tuple instances to [List].
+ *
+ * Each [toList] function uses an upper-bound type parameter `Base` so that
+ * the returned list has the most specific common supertype of all elements.
+ *
+ * Usage:
+ * ```kotlin
+ * val list: List<Int> = tupleOf(1, 2, 3).toList()         // [1, 2, 3]
+ * val mixed: List<Any> = tupleOf(1, "a", true).toList()    // [1, "a", true]
+ * ```
+ */
 package com.example.tuple
 
+/** Converts a [Tuple0] to an empty list. */
 fun Tuple0.toList(): List<Nothing> = emptyList()
 
+/** Converts a [Tuple1] to a single-element list. */
 fun <Base, A0 : Base> Tuple1<A0>.toList(): List<Base> = listOf(first)
 
+/** Converts a [Tuple2] to a two-element list. */
 fun <Base, A0 : Base, A1 : Base> Tuple2<A0, A1>.toList(): List<Base> = listOf(first, second)
 
 fun <Base, A0 : Base, A1 : Base, A2 : Base> Tuple3<A0, A1, A2>.toList(): List<Base> = listOf(first, second, third)

@@ -1,10 +1,31 @@
+/**
+ * Null-safety utilities for Tuple types.
+ *
+ * Provides [allNotNullOrNull] as both top-level functions and extension functions.
+ * Returns a non-nullable Tuple if all elements are non-null, or `null` if any element is null.
+ *
+ * Uses the `val x = x ?: return null` early-return pattern for consistency and readability.
+ *
+ * Usage:
+ * ```kotlin
+ * val name: String? = ...
+ * val age: Int? = ...
+ * val result: Tuple2<String, Int>? = allNotNullOrNull(name, age)
+ * // or
+ * val result2: Tuple2<String, Int>? = tupleOf(name, age).allNotNullOrNull()
+ * ```
+ */
 package com.example.tuple
 
-// Tuple1
-
+/**
+ * Returns a [Tuple1] if [first] is non-null, or `null` otherwise.
+ */
 fun <A0 : Any> allNotNullOrNull(first: A0?): Tuple1<A0>? =
     tupleOf(first).allNotNullOrNull()
 
+/**
+ * Returns a non-nullable [Tuple1] if all elements are non-null, or `null` if any element is null.
+ */
 fun <A0 : Any> Tuple1<A0?>.allNotNullOrNull(): Tuple1<A0>? {
     val first = first ?: return null
     return tupleOf(first)

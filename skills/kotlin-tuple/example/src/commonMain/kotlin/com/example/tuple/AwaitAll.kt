@@ -1,7 +1,26 @@
+/**
+ * Type-safe [awaitAll] functions for multiple [Deferred] values.
+ *
+ * Unlike `kotlinx.coroutines.awaitAll` which returns `List<T>` (requiring a common type),
+ * these overloads preserve each element's distinct type by returning a Tuple.
+ *
+ * Usage:
+ * ```kotlin
+ * val (name, age, active) = awaitAll(
+ *     async { fetchName() },    // Deferred<String>
+ *     async { fetchAge() },     // Deferred<Int>
+ *     async { fetchActive() },  // Deferred<Boolean>
+ * )
+ * // name: String, age: Int, active: Boolean
+ * ```
+ */
 package com.example.tuple
 
 import kotlinx.coroutines.Deferred
 
+/**
+ * Awaits a single [Deferred] and wraps the result in a [Tuple1].
+ */
 suspend fun <A0> awaitAll(
     first: Deferred<A0>,
 ): Tuple1<A0> = tupleOf(first.await())
