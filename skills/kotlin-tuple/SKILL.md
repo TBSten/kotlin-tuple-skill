@@ -11,8 +11,7 @@ description: >
 
 # Kotlin Tuple Utility Generation Skill
 
-Generates type-safe Tuple utilities for Kotlin and Kotlin Multiplatform projects.
-Produces data classes from Tuple0 to TupleN, along with factory functions and optional utilities.
+Generates type-safe Tuple utilities for Kotlin/KMP projects by copying pre-built example files and adjusting package names.
 
 ## Usage
 
@@ -31,10 +30,10 @@ Before generating code, confirm the following with the user in **a single messag
 4. **File types to generate** (default: all)
    - Let the user select (multiple choice):
      - [x] `Tuple.kt` + `TupleFactory.kt` — Tuple data classes and tupleOf factories (required, always generated)
-     - [x] `TupleToList.kt` — `toList()` extension functions (see [tuple-to-list.md](./tuple-to-list.md))
-     - [x] `TupleSerializer.kt` — KSerializer for kotlinx.serialization (see [tuple-serializer.md](./tuple-serializer.md))
-     - [x] `AwaitAll.kt` — Type-safe awaitAll (see [await-all.md](./await-all.md))
-     - [x] `AllNotNullOrNull.kt` — allNotNullOrNull utility (see [all-not-null-or-null.md](./all-not-null-or-null.md))
+     - [x] `TupleToList.kt` — `toList()` extension functions
+     - [x] `TupleSerializer.kt` — KSerializer for kotlinx.serialization
+     - [x] `AwaitAll.kt` — Type-safe awaitAll
+     - [x] `AllNotNullOrNull.kt` — allNotNullOrNull utility
 
 ### Output Directory Detection
 
@@ -77,96 +76,37 @@ I'll generate Tuple utilities. Let me confirm the following:
 OK to proceed?
 ```
 
-### After Confirmation
+## Generation Method: Copy from Example
 
-1. Finalize the generation scope based on the user's answers
-2. For each selected optional file, **read the corresponding reference file** to get the detailed generation rules:
-   - TupleToList.kt → read [tuple-to-list.md](./tuple-to-list.md)
-   - TupleSerializer.kt → read [tuple-serializer.md](./tuple-serializer.md)
-   - AwaitAll.kt → read [await-all.md](./await-all.md)
-   - AllNotNullOrNull.kt → read [all-not-null-or-null.md](./all-not-null-or-null.md)
-3. Generate all selected files **in parallel** (each file is independent — use parallel tool calls to write them simultaneously)
-4. If TupleSerializer.kt is selected, verify `kotlinx-serialization` plugin and dependency in build.gradle.kts
-5. If AwaitAll.kt is selected, verify `kotlinx-coroutines` dependency in build.gradle.kts
+This skill ships pre-built example files under `example/src/commonMain/kotlin/com/example/tuple/`.
+**Do NOT generate code from scratch.** Instead, copy example files and adjust them.
 
-## Files to Generate
+### Step-by-step
 
-Let N be the max size (default N=20).
+1. Determine the absolute path of the example directory relative to this skill's location:
+   - Example files: `<skill_dir>/example/src/commonMain/kotlin/com/example/tuple/`
+2. Create the target output directory (if not exists)
+3. **Copy selected files** from the example directory to the target output directory using Bash `cp`
+   - Always copy: `Tuple.kt`, `TupleFactory.kt`
+   - Copy if selected: `TupleToList.kt`, `TupleSerializer.kt`, `AwaitAll.kt`, `AllNotNullOrNull.kt`
+4. **Replace package name** in all copied files using Bash `sed`:
+   ```bash
+   sed -i '' 's/package com\.example\.tuple/package <USER_PACKAGE>/g' <TARGET_DIR>/*.kt
+   ```
+   Also replace import statements if the package is used in imports:
+   ```bash
+   sed -i '' 's/import com\.example\.tuple\./import <USER_PACKAGE>./g' <TARGET_DIR>/*.kt
+   ```
+5. **If max Tuple size < 20**: Read each copied file and remove Tuple definitions beyond N.
+   - Each file has clearly separated blocks per Tuple size — remove lines for Tuple(N+1) through Tuple20
+6. **If max Tuple size > 20**: Read the reference `.md` files to understand the pattern, then extend the copied files.
+   - Reference files: [tuple-to-list.md](./tuple-to-list.md), [tuple-serializer.md](./tuple-serializer.md), [await-all.md](./await-all.md), [all-not-null-or-null.md](./all-not-null-or-null.md)
+7. **Verify dependencies** in `build.gradle.kts`:
+   - If TupleSerializer.kt is included → verify `kotlinx-serialization` plugin and dependency
+   - If AwaitAll.kt is included → verify `kotlinx-coroutines` dependency
 
-| File | Description | Required | Reference |
-|---|---|---|---|
-| `Tuple.kt` | Data class definitions for Tuple0–TupleN | Required | (below) |
-| `TupleFactory.kt` | `tupleOf()` factory functions (0–N args) | Required | (below) |
-| `TupleToList.kt` | `toList()` extension functions for Tuple → `List<Base>` | Optional | [tuple-to-list.md](./tuple-to-list.md) |
-| `TupleSerializer.kt` | `KSerializer` implementations for kotlinx.serialization | Optional | [tuple-serializer.md](./tuple-serializer.md) |
-| `AwaitAll.kt` | Type-safe `awaitAll()` for 1–N Deferred values | Optional | [await-all.md](./await-all.md) |
-| `AllNotNullOrNull.kt` | `allNotNullOrNull()` top-level and extension functions | Optional | [all-not-null-or-null.md](./all-not-null-or-null.md) |
+### Why This Approach
 
-## Design Rules
-
-### Property Naming Convention
-
-Use ordinal names. Since Tuple2/Tuple3 are typealiases for Pair/Triple, `first/second/third` naturally align.
-
-| Position | Property | Position | Property |
-|---:|---|---:|---|
-| 1 | `first` | 11 | `eleventh` |
-| 2 | `second` | 12 | `twelfth` |
-| 3 | `third` | 13 | `thirteenth` |
-| 4 | `fourth` | 14 | `fourteenth` |
-| 5 | `fifth` | 15 | `fifteenth` |
-| 6 | `sixth` | 16 | `sixteenth` |
-| 7 | `seventh` | 17 | `seventeenth` |
-| 8 | `eighth` | 18 | `eighteenth` |
-| 9 | `ninth` | 19 | `nineteenth` |
-| 10 | `tenth` | 20 | `twentieth` |
-
-### Tuple.kt
-
-- `Tuple0` is a `data object` (no elements)
-- `Tuple1<A0>` is a `data class` (single element)
-- `Tuple2<A0, A1>` is a `typealias` for `Pair<A0, A1>` (reuses Kotlin standard Pair)
-- `Tuple3<A0, A1, A2>` is a `typealias` for `Triple<A0, A1, A2>` (reuses Kotlin standard Triple)
-- `Tuple4`–`TupleN` are `data class`es with ordinal-named properties
-- All Tuples override `toString()`: `"($first, $second, ...)"` format
-  - Tuple0 returns `"()"`
-  - Tuple2/Tuple3 are typealiases, so no toString override needed (uses Pair/Triple defaults)
-
-```kotlin
-// Example: Tuple4
-data class Tuple4<A0, A1, A2, A3>(
-    val first: A0,
-    val second: A1,
-    val third: A2,
-    val fourth: A3,
-) {
-    override fun toString(): String = "($first, $second, $third, $fourth)"
-}
-```
-
-### TupleFactory.kt
-
-Define a `tupleOf()` factory function for each Tuple.
-
-```kotlin
-fun tupleOf(): Tuple0 = Tuple0
-fun <A0> tupleOf(first: A0): Tuple1<A0> = Tuple1(first)
-fun <A0, A1> tupleOf(first: A0, second: A1): Tuple2<A0, A1> = Tuple2(first, second)
-fun <A0, A1, A2> tupleOf(first: A0, second: A1, third: A2): Tuple3<A0, A1, A2> = Tuple3(first, second, third)
-fun <A0, A1, A2, A3> tupleOf(first: A0, second: A1, third: A2, fourth: A3): Tuple4<A0, A1, A2, A3> = Tuple4(first, second, third, fourth)
-// ... up to TupleN
-```
-
-- `Tuple2(first, second)` is equivalent to `Pair(first, second)` (typealias)
-- `Tuple3(first, second, third)` is equivalent to `Triple(first, second, third)` (typealias)
-
-## Code Generation Tips
-
-The code generated by this skill is highly repetitive (N+1 patterns from Tuple0 to TupleN).
-Keep the following in mind:
-
-- Type parameter naming: `A0`, `A1`, ..., `A19` (0-indexed)
-- Property naming: `first`, `second`, `third`, `fourth`, ... `twentieth` (ordinal names, see naming table above)
-- The number of type parameters and properties must match for each Tuple
-- Don't forget the Tuple2 = Pair, Tuple3 = Triple typealiases
-- Don't forget the `package` declaration at the top of each file
+- The example files contain ~2,600 lines of repetitive Kotlin code (Tuple0–Tuple20)
+- Copying and `sed`-replacing is far more efficient than generating from scratch
+- Minimizes context consumption and eliminates generation errors
